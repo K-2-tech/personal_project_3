@@ -1,13 +1,23 @@
-import React, { useEffect, useRef, useState } from 'react';
-import './YouTubePlayer.css';
-import { useYouTube } from '../contexts/YouTubeContext';
+import React, { useEffect, useRef, useState } from "react";
+import "./YouTubePlayer.css";
+import { useYouTube } from "../contexts/YouTubeContext";
 
 const YouTubePlayer = () => {
   const {
-    videoUrl, setVideoUrl, videoId, setVideoId,
-    startTime, setStartTime, endTime, setEndTime,
-    initializePlayer, cleanupPlayer, playerRef,
-    isPlaying, playVideo, pauseVideo
+    videoUrl,
+    setVideoUrl,
+    videoId,
+    setVideoId,
+    startTime,
+    setStartTime,
+    endTime,
+    setEndTime,
+    initializePlayer,
+    cleanupPlayer,
+    playerRef,
+    isPlaying,
+    playVideo,
+    pauseVideo,
   } = useYouTube();
 
   const [currentTime, setCurrentTime] = useState(0);
@@ -17,9 +27,10 @@ const YouTubePlayer = () => {
 
   useEffect(() => {
     if (!window.YT) {
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      const firstScriptTag = document.getElementsByTagName('script')[0];
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      tag.async = true;
+      const firstScriptTag = document.getElementsByTagName("script")[0];
       firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
       window.onYouTubeIframeAPIReady = () => {
         if (videoId) {
@@ -39,7 +50,7 @@ const YouTubePlayer = () => {
       if (playerRef.current && isPlayerReady) {
         const currentTime = playerRef.current.getCurrentTime();
         setCurrentTime(currentTime);
-        
+
         if (!duration || duration === 100) {
           const newDuration = playerRef.current.getDuration();
           setDuration(newDuration);
@@ -75,7 +86,7 @@ const YouTubePlayer = () => {
 
   const handleSliderChange = (type, value) => {
     const time = (value / 100) * duration;
-    if (type === 'start') {
+    if (type === "start") {
       setStartTime(time);
       if (playerRef.current && isPlayerReady) {
         playerRef.current.seekTo(time);
@@ -109,7 +120,9 @@ const YouTubePlayer = () => {
             min="0"
             max="100"
             value={(startTime / (duration || 1)) * 100}
-            onChange={(e) => handleSliderChange('start', parseFloat(e.target.value))}
+            onChange={(e) =>
+              handleSliderChange("start", parseFloat(e.target.value))
+            }
             className="slider start-slider"
           />
           <input
@@ -117,7 +130,9 @@ const YouTubePlayer = () => {
             min="0"
             max="100"
             value={(endTime / (duration || 1)) * 100}
-            onChange={(e) => handleSliderChange('end', parseFloat(e.target.value))}
+            onChange={(e) =>
+              handleSliderChange("end", parseFloat(e.target.value))
+            }
             className="slider end-slider"
           />
         </div>

@@ -1,10 +1,16 @@
-import React, { createContext, useState, useContext, useRef, useCallback } from 'react';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useRef,
+  useCallback,
+} from "react";
 
 const YouTubeContext = createContext();
 
 export const YouTubeProvider = ({ children }) => {
-  const [videoUrl, setVideoUrl] = useState('');
-  const [videoId, setVideoId] = useState('');
+  const [videoUrl, setVideoUrl] = useState("");
+  const [videoId, setVideoId] = useState("");
   const [startTime, setStartTime] = useState(0);
   const [endTime, setEndTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -17,7 +23,7 @@ export const YouTubeProvider = ({ children }) => {
         playerRef.current.playVideo();
         setIsPlaying(true);
       } catch (error) {
-        console.error('Error playing video:', error);
+        console.error("Error playing video:", error);
       }
     }
   }, [isPlayerReady]);
@@ -28,43 +34,46 @@ export const YouTubeProvider = ({ children }) => {
         playerRef.current.pauseVideo();
         setIsPlaying(false);
       } catch (error) {
-        console.error('Error pausing video:', error);
+        console.error("Error pausing video:", error);
       }
     }
   }, [isPlayerReady]);
 
-  const initializePlayer = useCallback((videoId) => {
-    if (!videoId) return;
-    if (playerRef.current) {
-      playerRef.current.destroy();
-    }
-    try {
-      playerRef.current = new window.YT.Player('youtube-player', {
-        videoId: videoId,
-        playerVars: {
-          start: startTime,
-          end: endTime,
-          controls: 1,
-        },
-        events: {
-          onReady: () => {
-            setIsPlayerReady(true);
+  const initializePlayer = useCallback(
+    (videoId) => {
+      if (!videoId) return;
+      if (playerRef.current) {
+        playerRef.current.destroy();
+      }
+      try {
+        playerRef.current = new window.YT.Player("youtube-player", {
+          videoId: videoId,
+          playerVars: {
+            start: startTime,
+            end: endTime,
+            controls: 1,
           },
-          onStateChange: (event) => {
-            if (event.data === window.YT.PlayerState.ENDED) {
-              if (isPlaying) {
-                playerRef.current.seekTo(startTime);
-                playerRef.current.playVideo();
+          events: {
+            onReady: () => {
+              setIsPlayerReady(true);
+            },
+            onStateChange: (event) => {
+              if (event.data === window.YT.PlayerState.ENDED) {
+                if (isPlaying) {
+                  playerRef.current.seekTo(startTime);
+                  playerRef.current.playVideo();
+                }
               }
-            }
+            },
           },
-        },
-      });
-    } catch (error) {
-      console.error('Error initializing YouTube player:', error);
-      setIsPlayerReady(false);
-    }
-  }, [startTime, endTime, isPlaying]);
+        });
+      } catch (error) {
+        console.error("Error initializing YouTube player:", error);
+        setIsPlayerReady(false);
+      }
+    },
+    [startTime, endTime, isPlaying]
+  );
 
   const cleanupPlayer = useCallback(() => {
     if (playerRef.current) {
@@ -73,7 +82,7 @@ export const YouTubeProvider = ({ children }) => {
         playerRef.current = null;
         setIsPlayerReady(false);
       } catch (error) {
-        console.error('Error cleaning up player:', error);
+        console.error("Error cleaning up player:", error);
       }
     }
   }, []);
@@ -81,12 +90,18 @@ export const YouTubeProvider = ({ children }) => {
   return (
     <YouTubeContext.Provider
       value={{
-        videoUrl, setVideoUrl,
-        videoId, setVideoId,
-        startTime, setStartTime,
-        endTime, setEndTime,
-        isPlaying, setIsPlaying,
-        isPlayerReady, setIsPlayerReady,
+        videoUrl,
+        setVideoUrl,
+        videoId,
+        setVideoId,
+        startTime,
+        setStartTime,
+        endTime,
+        setEndTime,
+        isPlaying,
+        setIsPlaying,
+        isPlayerReady,
+        setIsPlayerReady,
         playerRef,
         playVideo,
         pauseVideo,
