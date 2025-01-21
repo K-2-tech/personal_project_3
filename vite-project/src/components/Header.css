@@ -1,0 +1,30 @@
+.header-wrapper {
+  display: flex;
+  height: 70px;
+
+  justify-content: center;
+  align-items: center;
+}
+.title {
+  font-size: 50px;
+  text-align: center;
+  display: flex;
+}
+div.title > p {
+  background: linear-gradient(to right, #2196f3, orange);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding: 10px;
+  margin: 10px 0;
+}
+@media screen and (max-width: 499px) {
+  .header-wrapper {
+    height: 55px;
+  }
+  .title {
+    font-size: 30px;
+  }
+  img {
+    height: 50px;
+  }
+}

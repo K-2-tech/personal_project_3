@@ -1,16 +1,9 @@
-import React from 'react';
-import { PomodoroProvider } from './contexts/PomodoroContext';
-import { YouTubeProvider } from './contexts/YouTubeContext';
-import MainContainer from './components/MainContainer';
-import "./App.css"
-const App = () => {
+import Router from "./routes/Routes";
+import "./App.css";
+export default function App() {
   return (
-    <PomodoroProvider>
-      <YouTubeProvider>
-        <MainContainer />
-      </YouTubeProvider>
-    </PomodoroProvider>
+    <>
+      <Router />
+    </>
   );
-};
-
-export default App;
+}
