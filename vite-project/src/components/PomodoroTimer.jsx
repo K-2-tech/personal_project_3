@@ -56,10 +56,10 @@ const PomodoroTimer = () => {
           onChange={(e) => updateStudyDuration(parseInt(e.target.value))}
           disabled={isActive}
         >
-          <option value="15">15 minutes</option>
-          <option value="25">25 minutes</option>
-          <option value="30">30 minutes</option>
-          <option value="45">45 minutes</option>
+          <option value="15">15 min</option>
+          <option value="25">25 min</option>
+          <option value="30">30 min</option>
+          <option value="45">45 min</option>
         </select>
       </div>
     </div>

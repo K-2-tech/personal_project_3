@@ -1,4 +1,3 @@
-// contexts/YouTubeContext.jsx
 import React, { createContext, useState, useContext, useRef, useCallback } from 'react';
 
 const YouTubeContext = createContext();
@@ -36,11 +35,9 @@ export const YouTubeProvider = ({ children }) => {
 
   const initializePlayer = useCallback((videoId) => {
     if (!videoId) return;
-
     if (playerRef.current) {
       playerRef.current.destroy();
     }
-
     try {
       playerRef.current = new window.YT.Player('youtube-player', {
         videoId: videoId,
@@ -84,17 +81,12 @@ export const YouTubeProvider = ({ children }) => {
   return (
     <YouTubeContext.Provider
       value={{
-        videoUrl,
-        setVideoUrl,
-        videoId,
-        setVideoId,
-        startTime,
-        setStartTime,
-        endTime,
-        setEndTime,
-        isPlaying,
-        setIsPlaying,
-        isPlayerReady,
+        videoUrl, setVideoUrl,
+        videoId, setVideoId,
+        startTime, setStartTime,
+        endTime, setEndTime,
+        isPlaying, setIsPlaying,
+        isPlayerReady, setIsPlayerReady,
         playerRef,
         playVideo,
         pauseVideo,
