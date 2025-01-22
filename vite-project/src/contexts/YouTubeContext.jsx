@@ -129,22 +129,25 @@ export const YouTubeProvider = ({ children }) => {
       duration: 0,
     });
   };
-
   const saveURLs = () => {
     if (videoUrl && videoMetadata.title) {
-      setSavedVideos((prev) => {
-        // 現在のURLと同じものを除外した配列を作成
-        const filteredVideos = prev.filter((video) => video.url !== videoUrl);
+      // 現在のURLと同じものを除外した配列を作成
+      const filteredVideos = savedVideos.filter(
+        (video) => video.url !== videoUrl
+      );
 
-        // 新しいビデオを配列の先頭に追加
-        return [
-          {
-            url: videoUrl,
-            title: videoMetadata.title,
-          },
-          ...filteredVideos,
-        ];
-      });
+      // 新しいビデオを配列の先頭に追加
+      const updatedVideos = [
+        {
+          url: videoUrl,
+          title: videoMetadata.title,
+        },
+        ...filteredVideos,
+      ];
+
+      // ローカルストレージに保存
+      localStorage.setItem("savedVideos", JSON.stringify(updatedVideos));
+      setSavedVideos(updatedVideos);
     }
   };
 
@@ -189,6 +192,7 @@ export const YouTubeProvider = ({ children }) => {
         clearURL,
         saveURLs,
         savedVideos,
+        setSavedVideos,
         loadSavedVideo,
         videoMetadata,
         extractVideoId,

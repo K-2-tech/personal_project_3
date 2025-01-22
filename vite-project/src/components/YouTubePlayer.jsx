@@ -20,6 +20,7 @@ const YouTubePlayer = () => {
     isPlaying,
     playVideo,
     pauseVideo,
+    setSavedVideos,
     savedVideos,
     loadSavedVideo,
     extractVideoId,
@@ -69,6 +70,11 @@ const YouTubePlayer = () => {
     }, 100);
     return () => clearInterval(interval);
   }, [playerRef, isPlayerReady, startTime, endTime, duration]);
+  // コンポーネントがマウントされたときに、ローカルストレージからデータを取得する
+  useEffect(() => {
+    const storedVideos = JSON.parse(localStorage.getItem("savedVideos")) || [];
+    setSavedVideos(storedVideos);
+  }, []);
 
   const handleUrlChange = (e) => {
     const url = e.target.value;
