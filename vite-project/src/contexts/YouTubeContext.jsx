@@ -12,9 +12,15 @@ export const YouTubeProvider = ({ children }) => {
   const [videoUrl, setVideoUrl] = useState("");
   const [videoId, setVideoId] = useState("");
   const [startTime, setStartTime] = useState(0);
-  const [endTime, setEndTime] = useState(0);
+  const [endTime, setEndTime] = useState(60);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
+  const [savedVideos, setSavedVideos] = useState([]);
+  const [videoMetadata, setVideoMetadata] = useState({
+    title: "",
+    channelTitle: "",
+    duration: 0,
+  });
   const playerRef = useRef(null);
 
   const playVideo = useCallback(() => {
@@ -39,6 +45,27 @@ export const YouTubeProvider = ({ children }) => {
     }
   }, [isPlayerReady]);
 
+  const fetchVideoMetadata = useCallback(async (videoId) => {
+    if (!videoId) return;
+
+    try {
+      const videoData = playerRef.current.getVideoData();
+
+      const duration = playerRef.current.getDuration();
+      const metadata = {
+        title: videoData.title,
+        channelTitle: videoData.author,
+        duration: duration,
+      };
+      setVideoMetadata(metadata);
+
+      return metadata;
+    } catch (error) {
+      console.error("Error fetching video metadata:", error);
+      return null;
+    }
+  }, []);
+
   const initializePlayer = useCallback(
     (videoId) => {
       if (!videoId) return;
@@ -56,6 +83,7 @@ export const YouTubeProvider = ({ children }) => {
           events: {
             onReady: () => {
               setIsPlayerReady(true);
+              fetchVideoMetadata(videoId);
             },
             onStateChange: (event) => {
               if (event.data === window.YT.PlayerState.ENDED) {
@@ -72,7 +100,7 @@ export const YouTubeProvider = ({ children }) => {
         setIsPlayerReady(false);
       }
     },
-    [startTime, endTime, isPlaying]
+    [startTime, endTime, isPlaying, videoId, fetchVideoMetadata]
   );
 
   const cleanupPlayer = useCallback(() => {
@@ -81,11 +109,62 @@ export const YouTubeProvider = ({ children }) => {
         playerRef.current.destroy();
         playerRef.current = null;
         setIsPlayerReady(false);
+        setVideoMetadata({
+          title: "",
+          channelTitle: "",
+          duration: 0,
+        });
       } catch (error) {
         console.error("Error cleaning up player:", error);
       }
     }
   }, []);
+
+  const clearURL = () => {
+    setVideoUrl("");
+    setVideoId("");
+    setVideoMetadata({
+      title: "",
+      channelTitle: "",
+      duration: 0,
+    });
+  };
+
+  const saveURLs = () => {
+    if (videoUrl && videoMetadata.title) {
+      setSavedVideos((prev) => {
+        // 現在のURLと同じものを除外した配列を作成
+        const filteredVideos = prev.filter((video) => video.url !== videoUrl);
+
+        // 新しいビデオを配列の先頭に追加
+        return [
+          {
+            url: videoUrl,
+            title: videoMetadata.title,
+          },
+          ...filteredVideos,
+        ];
+      });
+    }
+  };
+
+  const loadSavedVideo = (url) => {
+    setVideoUrl(url);
+    const id = extractVideoId(url);
+    if (id) {
+      setVideoId(id);
+      setStartTime(0);
+      setEndTime(60);
+      initializePlayer(id);
+    }
+  };
+
+  const extractVideoId = (url) => {
+    const match = url.match(
+      /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+    );
+    return match ? match[1] : null;
+  };
 
   return (
     <YouTubeContext.Provider
@@ -107,6 +186,12 @@ export const YouTubeProvider = ({ children }) => {
         pauseVideo,
         initializePlayer,
         cleanupPlayer,
+        clearURL,
+        saveURLs,
+        savedVideos,
+        loadSavedVideo,
+        videoMetadata,
+        extractVideoId,
       }}
     >
       {children}

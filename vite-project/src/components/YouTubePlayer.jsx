@@ -15,13 +15,18 @@ const YouTubePlayer = () => {
     initializePlayer,
     cleanupPlayer,
     playerRef,
+    clearURL,
+    saveURLs,
     isPlaying,
     playVideo,
     pauseVideo,
+    savedVideos,
+    loadSavedVideo,
+    extractVideoId,
   } = useYouTube();
 
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(100);
+  const [duration, setDuration] = useState(60);
   const elementRef = useRef(null);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
 
@@ -51,7 +56,7 @@ const YouTubePlayer = () => {
         const currentTime = playerRef.current.getCurrentTime();
         setCurrentTime(currentTime);
 
-        if (!duration || duration === 100) {
+        if (!duration || duration === 60) {
           const newDuration = playerRef.current.getDuration();
           setDuration(newDuration);
           setEndTime(newDuration);
@@ -64,13 +69,6 @@ const YouTubePlayer = () => {
     }, 100);
     return () => clearInterval(interval);
   }, [playerRef, isPlayerReady, startTime, endTime, duration]);
-
-  const extractVideoId = (url) => {
-    const match = url.match(
-      /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-    );
-    return match ? match[1] : null;
-  };
 
   const handleUrlChange = (e) => {
     const url = e.target.value;
@@ -111,6 +109,20 @@ const YouTubePlayer = () => {
           onChange={handleUrlChange}
           placeholder="YouTube URL"
         />
+
+        <button onClick={clearURL}>Clear</button>
+        <button onClick={saveURLs}>Save URL</button>
+      </div>
+      <div className="saved-videos">
+        {savedVideos.map((video, index) => (
+          <div
+            key={index}
+            className="saved-video-title"
+            onClick={() => loadSavedVideo(video.url)}
+          >
+            {video.title}
+          </div>
+        ))}
       </div>
       <div id="youtube-player" className="youtube-frame"></div>
       <div className="slider-controls">

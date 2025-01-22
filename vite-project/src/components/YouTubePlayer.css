@@ -67,7 +67,7 @@
   color: #666;
 }
 
-input{
+input {
   width: 70%;
   padding: 1.2rem;
   border: 2px solid #e0e0e0;
@@ -81,13 +81,32 @@ input{
   .youtube-frame {
     width: 50%;
   }
-  
+
   .double-slider-container,
   .time-display {
     width: 50%;
   }
 }
-.url-input{
-  display: flex;
-  justify-content: center;
+.url-input {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+.url-input input {
+  grid-column: 1 / 3;
+}
+@media screen and (min-width: 768px) {
+  .url-input {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+.saved-videos {
+  margin: 10px 0;
+}
+
+.saved-video-title {
+  color: white;
+  padding: 5px;
+  margin: 2px 0;
 }

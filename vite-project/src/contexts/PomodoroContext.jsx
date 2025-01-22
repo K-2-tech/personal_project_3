@@ -1,4 +1,10 @@
-import React, { createContext, useState, useContext, useCallback, useEffect } from 'react';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useCallback,
+  useEffect,
+} from "react";
 
 const PomodoroContext = createContext();
 
@@ -46,21 +52,27 @@ export const PomodoroProvider = ({ children }) => {
     setTimeRemaining(studyDuration);
   }, [studyDuration]);
 
-  const updateStudyDuration = useCallback((minutes) => {
-    const newDuration = minutes * 60;
-    setStudyDuration(newDuration);
-    if (!isActive && isStudying) {
-      setTimeRemaining(newDuration);
-    }
-  }, [isActive, isStudying]);
+  const updateStudyDuration = useCallback(
+    (minutes) => {
+      const newDuration = minutes * 60;
+      setStudyDuration(newDuration);
+      if (!isActive && isStudying) {
+        setTimeRemaining(newDuration);
+      }
+    },
+    [isActive, isStudying]
+  );
 
-  const updateBreakDuration = useCallback((minutes) => {
-    const newDuration = minutes * 60;
-    setBreakDuration(newDuration);
-    if (!isActive && !isStudying) {
-      setTimeRemaining(newDuration);
-    }
-  }, [isActive, isStudying]);
+  const updateBreakDuration = useCallback(
+    (minutes) => {
+      const newDuration = minutes * 60;
+      setBreakDuration(newDuration);
+      if (!isActive && !isStudying) {
+        setTimeRemaining(newDuration);
+      }
+    },
+    [isActive, isStudying]
+  );
 
   return (
     <PomodoroContext.Provider
