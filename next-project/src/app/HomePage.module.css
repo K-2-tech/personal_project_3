@@ -1,0 +1,186 @@
+/* 全体的なスタイル */
+.container {
+  font-family: Arial, sans-serif;
+  color: #333;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+/*ヘッダー*/
+.headerWrapper {
+  display: flex;
+  height: 70px;
+  justify-content: center;
+  align-items: center;
+}
+
+.title {
+  font-size: 50px;
+  text-align: center;
+  display: flex;
+}
+
+.title > p {
+  background: linear-gradient(to right, #2196f3, orange);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding-bottom: 10px;
+  padding-top: 10px;
+  padding-right: 5px;
+  margin: 10px 0;
+}
+.title > span {
+  color: #2196f3;
+  padding: 10px 0;
+  margin: 10px 0;
+}
+
+@media screen and (max-width: 499px) {
+  .headerWrapper {
+    height: 55px;
+  }
+
+  .title {
+    font-size: 30px;
+  }
+}
+
+/* メインコンテンツ */
+.heroSection {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.heroTitle {
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+.heroDescription {
+  font-size: 18px;
+  color: #666;
+}
+
+.productSection {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 60px;
+}
+
+.productItem {
+  flex-basis: 30%;
+  text-align: center;
+  background-color: #f5f5f5;
+  padding: 20px;
+  border-radius: 5px;
+  transition: transform 0.3s;
+  cursor: pointer;
+  text-decoration: none;
+}
+.productItem:nth-child(1) {
+  border: 30px solid #2196f3;
+}
+.productItem:nth-child(2) {
+  border: 30px solid orange;
+}
+.productItem:nth-child(3) {
+  border: 30px solid rgb(187, 104, 187);
+}
+
+.productItem:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.productTitle {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.productDescription {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.blogSection {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.blogTitle {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.blogDescription {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.blogLink {
+  display: inline-block;
+  background-color: #28a745;
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.blogLink:hover {
+  background-color: #1e7e34;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+
+  .heroTitle {
+    font-size: 28px;
+  }
+
+  .heroDescription {
+    font-size: 16px;
+  }
+
+  .productSection {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .productItem {
+    flex-basis: auto;
+    margin-bottom: 40px;
+  }
+
+  .blogTitle {
+    font-size: 20px;
+  }
+
+  .blogDescription {
+    font-size: 14px;
+  }
+}
+/*フッター*/
+.footerMenu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  column-gap: 10px;
+}
+
+.copyright {
+  margin: auto;
+  text-align: center;
+}
+.copyright > small {
+  font-size: 15px;
+}
+.twitterIcon {
+  font-size: 24px;
+}

@@ -1,0 +1,39 @@
+.headerWrapper {
+  display: flex;
+  height: 70px;
+  justify-content: center;
+  align-items: center;
+}
+.headerLink {
+  text-decoration: none;
+}
+.title {
+  font-size: 50px;
+  text-align: center;
+  display: flex;
+}
+
+.title > p {
+  background: linear-gradient(to right, #2196f3, orange);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding-bottom: 10px;
+  padding-top: 10px;
+  padding-right: 5px;
+  margin: 10px 0;
+}
+.title > span {
+  color: #2196f3;
+  padding: 10px 0;
+  margin: 10px 0;
+}
+
+@media screen and (max-width: 499px) {
+  .headerWrapper {
+    height: 50px;
+  }
+
+  .title {
+    font-size: 25px;
+  }
+}

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- 青色の外周円 -->
+  <circle cx="100" cy="100" r="90" fill="none" stroke="#1E90FF" stroke-width="20"/>
+  
+  <!-- 中心から放射線状に配置された6つのL文字 -->
+  
+  
+  <g transform="rotate(60 100 100)">
+    <path d="M100 30 L100 100 L150 100" fill="none" stroke="#1E90FF" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  
+  <g transform="rotate(120 100 100)">
+    <path d="M100 30 L100 100 L150 100" fill="none" stroke="#1E90FF" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  
+  <g transform="rotate(180 100 100)">
+    <path d="M100 30 L100 100 L150 100" fill="none" stroke="#1E90FF" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  
+  <g transform="rotate(240 100 100)">
+    <path d="M100 30 L100 100 L150 100" fill="none" stroke="#1E90FF" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  
+  <g transform="rotate(300 100 100)">
+    <path d="M100 30 L100 100 L150 100" fill="none" stroke="#1E90FF" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  <g transform="rotate(0 100 100)">
+    <path d="M100 30 L100 100 L150 100" fill="none" stroke="orange" stroke-width="12" stroke-linecap="round"/>
+  </g>
+</svg>
