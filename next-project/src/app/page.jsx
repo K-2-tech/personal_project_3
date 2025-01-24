@@ -35,7 +35,7 @@ export default function HomePage() {
             <div>
               <h2 className={styles.productTitle}>AB Loop</h2>
               <p className={styles.productDescription}>
-                Loop playback for YouTube videos.
+                Loop playback for YouTube videos. Dance and piano practice.
               </p>
             </div>
           </Link>
