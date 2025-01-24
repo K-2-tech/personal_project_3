@@ -1,0 +1,66 @@
+.audioPlayerContainer {
+    background-color: #f3f4f6;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .playerControls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+  
+  .controlButton {
+    background: none;
+    border: none;
+    color: #4b5563;
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+  
+  .controlButton:disabled {
+    color: #9ca3af;
+    cursor: not-allowed;
+  }
+  
+  .controlButton:hover:not(:disabled) {
+    color: #3b82f6;
+  }
+  
+  .playPauseButton {
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .playPauseButton:hover {
+    background-color: #2563eb;
+  }
+  
+  .trackInfo {
+    text-align: center;
+    width: 100%;
+  }
+  
+  .currentTrack {
+    color: #4b5563;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }

@@ -1,0 +1,43 @@
+.container {
+    margin-top: 1.5rem;
+  }
+  
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .listItem {
+    display: flex;
+    align-items: center;
+    background-color: #f3f4f6;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+  }
+  
+  .dragHandle {
+    margin-right: 0.75rem;
+    cursor: move;
+    color: #6b7280;
+  }
+  
+  .fileName {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 0.75rem;
+  }
+  
+  .removeButton {
+    color: #ef4444;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+  
+  .removeButton:hover {
+    color: #dc2626;
+  }
