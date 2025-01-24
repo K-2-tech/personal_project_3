@@ -1,9 +1,9 @@
 import React from "react";
-
+import HotjarProvider from './components/HotjarProvider';
 export default function RootLayout({ children }) {
   return (
     <html>
-      <body>{children}</body>
+      <body><HotjarProvider />{children}</body>
     </html>
   );
 }
