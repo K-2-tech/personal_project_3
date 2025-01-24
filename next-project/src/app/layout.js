@@ -8,6 +8,7 @@ export default function RootLayout({ children }) {
   );
 }
 export const metadata = {
+  language: 'en', // English language setting
   title: "LearnLooper | Boost Learning Efficiency with Pomodoro & AB Loop",
   description: "A free, browser-based learning tool combining Pomodoro timer and YouTube AB loop. Enhance study focus, time management, and learning efficiency without login or stress.",
   keywords: [
@@ -24,7 +25,8 @@ export const metadata = {
     title: "LearnLooper - Optimize Your Learning Experience",
     description: "Streamline your study sessions with our intuitive, mobile-friendly learning tool featuring Pomodoro technique and YouTube AB loop.",
     type: "website",
-    url: "https://learnlooper.app",
+    url: "https://www.learnlooper.app",
+    locale: 'en_US', // English (US) locale setting
   },
   twitter: {
     card: "summary_large_image",
@@ -48,3 +50,4 @@ export const metadata = {
     google: "your-google-site-verification-code",
   }
 };
+
