@@ -12,7 +12,7 @@ export default function Privacy() {
         <Link href="/">Home</Link> &gt; <Link href="/privacy">Privacy</Link>
       </div>
       <h1>Privacy Policy</h1>
-      <p className="effective-date">Effective date: July 14, 2019</p>
+      <p className="effective-date">Effective date: July 14, 2024</p>
 
       <div className="section">
         <p>

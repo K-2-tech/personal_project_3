@@ -104,23 +104,23 @@
   margin-bottom: 20px;
 }
 
-.blogSection {
+.articlesSection {
   text-align: center;
   margin-bottom: 60px;
 }
 
-.blogTitle {
+.articlesTitle {
   font-size: 24px;
   margin-bottom: 10px;
 }
 
-.blogDescription {
+.articlesDescription {
   font-size: 16px;
   color: #666;
   margin-bottom: 20px;
 }
 
-.blogLink {
+.articlesLink {
   display: inline-block;
   background-color: #28a745;
   color: #fff;
@@ -130,7 +130,7 @@
   transition: background-color 0.3s;
 }
 
-.blogLink:hover {
+.articlesLink:hover {
   background-color: #1e7e34;
 }
 
@@ -158,11 +158,11 @@
     margin-bottom: 40px;
   }
 
-  .blogTitle {
+  .articlesTitle {
     font-size: 20px;
   }
 
-  .blogDescription {
+  .articlesDescription {
     font-size: 14px;
   }
 }

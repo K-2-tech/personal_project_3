@@ -1,0 +1,33 @@
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  .main h1 {
+    color: #333;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 10px;
+  }
+  .main h2 {
+    color: #444;
+  }
+  .effective-date {
+    font-style: italic;
+    color: #666;
+  }
+  .section {
+    margin-bottom: 20px;
+  }
+  .warning {
+    color: #d9534f;
+  }
+  .navLink > a {
+    color: #3498db;
+    text-decoration: none;
+  }
+  .navLink >a:hover {
+    text-decoration: underline;
+  }
+  

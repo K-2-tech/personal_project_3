@@ -49,12 +49,12 @@ export default function HomePage() {
           </Link>
         </section>
 
-        <section className={styles.blogSection}>
-          <h2 className={styles.blogTitle}>Articles &amp; FAQ</h2>
-          <p className={styles.blogDescription}>
+        <section className={styles.articlesSection}>
+          <h2 className={styles.articlesTitle}>Articles &amp; FAQ</h2>
+          <p className={styles.articlesDescription}>
             Check out our helpful tips and information.
           </p>
-          <Link href="/faq" className={styles.blogLink}>
+          <Link href="/articles" className={styles.articlesLink}>
             Read More
           </Link>
         </section>
