@@ -8,10 +8,7 @@ const Header = () => {
       <Image src="/icon.svg" height={45} width={45} alt="icon" />
       <Link href="/" className={styles.headerLink}>
         <div className={styles.title}>
-          <span>L</span>
-          <p>earn</p>
-          <span>L</span>
-          <p>ooper</p>
+         Learn Looper
         </div>
       </Link>
     </div>

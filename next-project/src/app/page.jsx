@@ -8,10 +8,7 @@ export default function HomePage() {
       <div className={styles.headerWrapper}>
         <Image src="./icon.svg" height={45} width={45} alt="icon" />
         <div className={styles.title}>
-          <span>L</span>
-          <p>earn</p>
-          <span>L</span>
-          <p>ooper</p>
+          Learn Looper
         </div>
       </div>
       <main className={styles.main}>

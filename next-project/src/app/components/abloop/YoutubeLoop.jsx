@@ -76,7 +76,7 @@ const YouTubeABLoop = () => {
   }, []);
   // ページ読み込み時にローカルストレージからメモを取得
   useEffect(() => {
-    const storedMemo = localStorage.getItem("memo");
+    const storedMemo = localStorage.getItem("abloop-memo");
     if (storedMemo) {
       try {
         const parsedMemo = JSON.parse(storedMemo);
@@ -93,7 +93,7 @@ const YouTubeABLoop = () => {
   useEffect(() => {
     if (memo.length > 0) {
       // メモが空でない場合のみ保存
-      localStorage.setItem("memo", JSON.stringify(memo));
+      localStorage.setItem("abloop-memo", JSON.stringify(memo));
       console.log("Saving to localStorage:", memo);
     }
   }, [memo]);

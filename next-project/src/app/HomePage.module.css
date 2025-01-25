@@ -19,23 +19,15 @@
   font-size: 50px;
   text-align: center;
   display: flex;
-}
-
-.title > p {
-  background: linear-gradient(to right, #2196f3, orange);
+  font-weight: bold;
+  background: linear-gradient(to right, #1E90FF, orange);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  padding-bottom: 10px;
-  padding-top: 10px;
-  padding-right: 5px;
-  margin: 10px 0;
 }
-.title > span {
-  color: #2196f3;
-  padding: 10px 0;
-  margin: 10px 0;
+div.title:first-letter,
+div.title:nth-child(6) {
+  color: #1E90FF;
 }
-
 @media screen and (max-width: 499px) {
   .headerWrapper {
     height: 55px;
