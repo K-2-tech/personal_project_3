@@ -11,7 +11,7 @@ const MainContainer = () => {
   const { playVideo, pauseVideo } = useYouTube();
 
   useEffect(() => {
-    if (isActive && isStudying) {
+    if (isStudying) {
       playVideo();
     } else {
       pauseVideo();
