@@ -3,55 +3,59 @@ import Header from '../../components/common/Header';
 import Footer from '../../components/common/Footer';
 import styles from '../Blog.module.css';
 import Link from "next/link";
-export default function Article1() {
+export default function Article2() {
   return (
-<>
-        <Header />
-        <div className={styles.navLink}>
-      <Link href="/">Home</Link> &gt;<Link href="/articles">Articles</Link> &gt; <Link href="/blog/article2">Article 2</Link>
-    </div>
-    <div className={styles.container}>
+    <>
+      <Header />
+      <div className={styles.navLink}>
+        <Link href="/">Home</Link> &gt;<Link href="/articles">Articles</Link> &gt; <Link href="/articles/article2">Article 2</Link>
+      </div>
+      <div className={styles.container}>
+        <main className={styles.main}>
+          <h1 className={styles.title}>LearnLooper: Transforming the Way We Learn</h1>
 
-    <main className={styles.main}>
-        <h1 className={styles.title}>LearnLooper: The Tool That's Revolutionizing Learning</h1>
-        <section className={styles.section}>
-          <p>
-            The tool "LearnLooper" that provides a stress-free learning experience has revolutionary features that set it apart from traditional learning apps.
-          </p>
-        </section>
-        <section className={styles.section}>
-          <h2>Simple Initial Setup</h2>
-          <p>
-            First, there is no need for tedious initial setup like registration or login. The simplicity of being able to start using it immediately is a key characteristic. To maximize the user's concentration, unnecessary features and complex settings have been eliminated, resulting in an intuitive interface.
-          </p>
-        </section>
-        <section className={styles.section}>
-          <h2>Flexible Learning Time Setting</h2>
-          <p>
-            LearnLooper offers flexibility in setting learning time. While the traditional Pomodoro technique was fixed at 25 minutes, LearnLooper allows you to freely set the timer in 1-minute increments. This enables you to effectively utilize even short breaks. It is the optimal tool for balancing concentration maintenance and efficient learning.
-          </p>
-        </section>
-        <section className={styles.section}>
-          <h2>Enjoyable Learning Experience</h2>
-          <p>
-            Furthermore, the YouTube integration feature allows you to learn while listening to your favorite music. Using the AB loop function, you can also repeat sections for further study. By providing a new approach to making learning enjoyable, it can enhance the user's concentration and learning motivation.
-          </p>
-        </section>
-        <section className={styles.section}>
-          <h2>Device-Independent</h2>
-          <p>
-            Responsive design that works across devices is another major feature. Whether on a smartphone or a computer, you can use it stress-free. The ability to freely switch between devices to suit your learning style is a great strength of LearnLooper.
-          </p>
-        </section>
-        <section className={styles.section}>
-          <p>
-            Completely free to use, LearnLooper is a tool that has features specialized for learning efficiency - truly a revolutionary tool. For those seeking a stress-free learning experience, this application is a must-have.
-          </p>
-        </section>
-      </main>
-     
-            </div>
-            <Footer />
-            </>
+          <section className={styles.section}>
+            <p>
+              In today’s fast-paced world, finding the time and focus to study can be challenging. LearnLooper is here to change that. This innovative tool simplifies learning and removes unnecessary hurdles, making it easier than ever to stay motivated and achieve your goals.
+            </p>
+          </section>
+
+          <section className={styles.section}>
+            <h2>Effortless Initial Setup</h2>
+            <p>
+              One of the standout features of LearnLooper is its simplicity. No sign-ups, no logins—just open the tool and start learning. This intuitive interface eliminates distractions, allowing you to focus on what truly matters: your studies. Imagine starting your session within seconds, with no technical barriers.
+            </p>
+          </section>
+
+          <section className={styles.section}>
+            <h2>Customizable Learning Times</h2>
+            <p>
+              Gone are the days of rigid 25-minute study sessions. LearnLooper empowers you to set timers in 1-minute increments, offering unparalleled flexibility. Whether you have 5 minutes between meetings or an hour-long study block, you can make every second count. Research shows that shorter, focused intervals can improve retention and reduce fatigue.
+            </p>
+          </section>
+
+          <section className={styles.section}>
+            <h2>Enhanced Learning with YouTube Integration</h2>
+            <p>
+              Learning doesn’t have to be boring. With LearnLooper, you can incorporate your favorite music or motivational videos directly from YouTube. The AB loop function lets you replay critical sections for deeper understanding. By pairing focused learning with enjoyable content, you’ll find yourself looking forward to study sessions like never before.
+            </p>
+          </section>
+
+          <section className={styles.section}>
+            <h2>Seamless Device Compatibility</h2>
+            <p>
+              Whether you’re at your desk or on the go, LearnLooper adapts to your lifestyle. Its responsive design ensures a seamless experience across smartphones, tablets, and computers. Switch between devices effortlessly and maintain your study flow without interruption.
+            </p>
+          </section>
+
+          <section className={styles.section}>
+            <p>
+              Free to use and packed with features, LearnLooper is the ultimate tool for boosting learning efficiency. Whether you’re preparing for exams, mastering a new skill, or simply trying to make the most of your time, LearnLooper is here to support you every step of the way. Experience the difference today and transform the way you learn.
+            </p>
+          </section>
+        </main>
+      </div>
+      <Footer />
+    </>
   );
 }
