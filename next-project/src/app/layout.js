@@ -1,14 +1,8 @@
 import React from "react";
 import HotjarProvider from './components/common/HotjarProvider';
-export default function RootLayout({ children }) {
-  return (
-    <html>
-      <body><HotjarProvider />{children}</body>
-    </html>
-  );
-}
-export const metadata = {
-  language: 'en', // English language setting
+
+const metadata = {
+  language: 'en',
   title: "Learn Looper | Boost Learning Efficiency with Pomodoro & AB Loop",
   description: "A free, browser-based learning tool combining Pomodoro timer and YouTube AB loop. Enhance study focus, time management, and learning efficiency without login or stress.",
   keywords: [
@@ -26,7 +20,7 @@ export const metadata = {
     description: "Streamline your study sessions with our intuitive, mobile-friendly learning tool featuring Pomodoro technique and YouTube AB loop.",
     type: "website",
     url: "https://learnlooper.app",
-    locale: 'en_US', // English (US) locale setting
+    locale: 'en_US',
   },
   twitter: {
     card: "summary_large_image",
@@ -51,3 +45,15 @@ export const metadata = {
   }
 };
 
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        <HotjarProvider />
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+
+export { metadata };
