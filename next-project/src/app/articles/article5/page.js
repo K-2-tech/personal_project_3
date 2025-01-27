@@ -48,7 +48,7 @@ export default function ToeicListeningTips() {
             <p>
               Additionally, LearnLooper’s integration with YouTube allows you to practice with diverse audio sources, from interviews to educational videos. This versatility ensures that you can tackle a wide range of listening challenges.
             </p>
-            <Link href="/" className={styles.link}>Explore all features of LearnLooper</Link>.
+            <Link href="/tools" className={styles.link}>Explore all features of LearnLooper</Link>.
           </section>
 
           <section className={styles.section}>

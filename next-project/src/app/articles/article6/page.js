@@ -46,7 +46,7 @@ export default function ScientificApproachLearning() {
             <p>
               Instead of passively reviewing notes, actively test yourself on the material. This technique strengthens neural connections and improves recall. Pairing active recall with LearnLooper’s focus-enhancing features can maximize your study efficiency.
             </p>
-            <Link href="/" className={styles.link}>See how LearnLooper supports effective learning methods</Link>.
+            <Link href="/tools" className={styles.link}>See how LearnLooper supports effective learning methods</Link>.
           </section>
 
           <section className={styles.section}>

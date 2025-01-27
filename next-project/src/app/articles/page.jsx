@@ -19,7 +19,10 @@ export default function Article1() {
                 </li><li><Link href="/articles/article4">AB Loop Listening</Link>
                 </li><li><Link href="/articles/article5">Effective TOEIC Listening Practice Using LearnLooper</Link>
                 </li><li><Link href="/articles/article6">Boost Your Learning Efficiency with Scientific Techniques</Link>
-                </li><li><Link href="/articles/article7">How to Maximize Learning Efficiency with a Pomodoro Timer</Link></li>
+                </li><li><Link href="/articles/article7">How to Maximize Learning Efficiency with a Pomodoro Timer</Link>
+                </li><li><Link href="/articles/article8">Unlock Your Study Potential: LearnLooper’s Multi-Audio Upload for Efficient Learning</Link></li>
+                <li><Link href="/articles/article9">Revolutionize Your Study Routine: Free Tools to Enhance Learning Productivity</Link></li>
+                <li><Link href="/articles/article10">From Procrastination to Productivity: The Ultimate Guide to Staying Focused with LearnLooper</Link></li>
                 </ul >
                 </main>
             <Footer />

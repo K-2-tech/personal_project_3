@@ -49,7 +49,7 @@ export default function PomodoroTimerEfficiency() {
             <p>
               With LearnLooper, you can also integrate music from YouTube to make your study sessions enjoyable and maintain focus. Explore this feature to transform your productivity.
             </p>
-            <Link href="/" className={styles.link}>Discover all features of LearnLooper</Link>.
+            <Link href="/tools" className={styles.link}>Discover all features of LearnLooper</Link>.
           </section>
 
           <section className={styles.section}>
