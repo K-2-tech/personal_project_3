@@ -53,7 +53,7 @@ export default function RootLayout({ children }) {
         {/* その他のhead要素 */}
         <Script
           async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=YOUR-CLIENT-ID"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=AW-11508731587"
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />
