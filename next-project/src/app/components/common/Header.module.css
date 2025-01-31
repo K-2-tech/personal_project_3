@@ -3,10 +3,23 @@
   height: 70px;
   justify-content: center;
   align-items: center;
+  width: 100%;
 }
+
+.contentContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 1200px;
+  width: 100%;
+  padding: 0 20px;
+  position: relative;
+}
+
 .headerLink {
   text-decoration: none;
 }
+
 .title {
   font-size: 50px;
   text-align: center;
@@ -16,9 +29,37 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
 div.title:first-letter,
 div.title:nth-child(6) {
-  color:  #1E90FF;
+  color: #1E90FF;
+}
+
+.feedbackButton {
+  position: absolute;
+  right: 20px;
+  padding: 8px 16px;
+  background-color: #1E90FF;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.feedbackButton:hover {
+  background-color: #1976D2;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+}
+
+.feedbackButton:active {
+  background-color: #1565C0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transform: translateY(0);
 }
 
 @media screen and (max-width: 499px) {
@@ -28,5 +69,11 @@ div.title:nth-child(6) {
 
   .title {
     font-size: 25px;
+  }
+
+  .feedbackButton {
+    padding: 6px 12px;
+    font-size: 12px;
+    right: 10px;
   }
 }

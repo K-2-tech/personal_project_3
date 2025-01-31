@@ -1,4 +1,5 @@
 import React from "react";
+import Script from "next/script";
 import HotjarProvider from './components/common/HotjarProvider';
 
 const metadata = {
@@ -47,11 +48,20 @@ const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html>
+    <html lang="en">
       <head>
-        <HotjarProvider />
+        {/* その他のhead要素 */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=YOUR-CLIENT-ID"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
       </head>
-      <body>{children}</body>
+      <body>
+        <HotjarProvider />
+        {children}
+      </body>
     </html>
   );
 }
