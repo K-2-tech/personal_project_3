@@ -48,20 +48,24 @@ const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html>
       <head>
-        {/* その他のhead要素 */}
+        <HotjarProvider />
+        {/* Google Advertising Tag */}
         <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=AW-11508731587"
-          crossOrigin="anonymous"
+          src="https://www.googletagmanager.com/gtag/js?id=AW-11508731587"
           strategy="afterInteractive"
         />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-11508731587');
+          `}
+        </Script>
       </head>
-      <body>
-        <HotjarProvider />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
