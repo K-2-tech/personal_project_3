@@ -3,7 +3,11 @@ import React from 'react';
 import { useDisplayLock } from '../common/DisplayLockProvider';
 
 const DisplayLock = () => {
-  const { isEnabled, toggleDisplayLock } = useDisplayLock();
+  const { 
+    isEnabled, 
+    toggleDisplayLock,
+    warningThreshold  // カスタマイズされた警告時間を取得
+  } = useDisplayLock();
 
   return (
     <button

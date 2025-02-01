@@ -21,11 +21,101 @@
     max-width: 800px;
   }
   
-  .contentWrapper {
+  .settingsWrapper {
     background-color: #f5f5f5;
     padding: 30px;
     border-radius: 8px;
     border-left: 5px solid #22c55e;
+    margin-bottom: 24px;
+  }
+  
+  .settingGroup {
+    margin-bottom: 24px;
+  }
+  
+  .settingLabel {
+    display: block;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #333;
+  }
+  
+  .timeInput {
+    width: 80px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-size: 16px;
+  }
+  
+  .notificationButton {
+    background-color: #22c55e;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .notificationButton:hover {
+    background-color: #16a34a;
+  }
+  
+  .hint {
+    font-size: 14px;
+    color: #666;
+    margin-top: 4px;
+  }
+  
+  .statusIndicator {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    margin-left: 8px;
+  }
+  
+  .statusIndicator.enabled {
+    background-color: #dcfce7;
+    color: #166534;
+  }
+  
+  .statusIndicator.disabled {
+    background-color: #fee2e2;
+    color: #991b1b;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .settingsWrapper {
+      background-color: #1f2937;
+      border-color: #22c55e;
+    }
+  
+    .title {
+      color: #f3f4f6;
+    }
+  
+    .description {
+      color: #d1d5db;
+    }
+  
+    .settingLabel {
+      color: #f3f4f6;
+    }
+  
+    .hint {
+      color: #9ca3af;
+    }
+  
+    .timeInput {
+      background-color: #374151;
+      border-color: #4b5563;
+      color: #f3f4f6;
+    }
   }
   
   @media (max-width: 768px) {
@@ -41,7 +131,7 @@
       font-size: 16px;
     }
   
-    .contentWrapper {
+    .settingsWrapper {
       padding: 20px;
     }
   }
