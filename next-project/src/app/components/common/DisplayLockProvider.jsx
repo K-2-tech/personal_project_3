@@ -84,7 +84,23 @@ const DisplayLockProvider = ({ children }) => {
       ];
     return messages[Math.floor(Math.random() * messages.length)];
   }, [warningThreshold]);
+  const requestNotificationPermission = useCallback(async () => {
+    if (!isMounted || typeof window === 'undefined') return false;
 
+    if ('Notification' in window) {
+      try {
+        const permission = await Notification.requestPermission();
+        setNotificationPermission(permission);
+        return permission === 'granted';
+      } catch (error) {
+        console.error('Failed to request notification permission:', error);
+        return false;
+      }
+    } else {
+      console.warn('Notifications not supported in this browser');
+      return false;
+    }
+  }, [isMounted]);
   const showNotification = useCallback((message) => {
     if (!isMounted || typeof window === 'undefined') return;
 
@@ -122,7 +138,12 @@ const DisplayLockProvider = ({ children }) => {
       }
     }
   }, [isMounted]);
-
+   // 初期化時の通知許可チェック
+   useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
   const checkFocusAndActivity = useCallback(() => {
     if (!isEnabledRef.current) return;
 
