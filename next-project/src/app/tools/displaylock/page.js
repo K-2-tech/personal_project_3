@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import styles from './DisplayLockPage.module.css';
-
+import Header from "../../components/common/Header"
+import Footer from "../../components/common/HFooter"
 // クライアントサイドでのみ読み込むコンポーネント
 const DisplayLock = dynamic(
   () => import('../../components/displaylock/DisplayLock'),
@@ -162,6 +163,8 @@ const DisplayLockWrapper = dynamic(
 // メインのページコンポーネント
 export default function DisplayLockPage() {
   return (
+    <>
+      <Header />
     <div className={styles.container}>
       <h1 className={styles.title}>Display Lock Settings</h1>
       <p className={styles.description}>
@@ -171,6 +174,8 @@ export default function DisplayLockPage() {
         too much time on external websites.
       </p>
       <DisplayLockWrapper />
-    </div>
+      </div>
+      <Footer />
+      </>
   );
 }

@@ -25,41 +25,25 @@ const DisplayLockProvider = ({ children }) => {
   const isEnabledRef = useRef(isEnabled);
   const warningThresholdRef = useRef(warningThreshold);
   const checkIntervalRef = useRef(null);
+  const lastCheckedRef = useRef(null);
 
   const ALLOWED_DOMAIN = 'learnlooper.app';
-  const CHECK_INTERVAL = 30000;
+  const CHECK_INTERVAL = 5000; // デバッグ用に5秒に短縮
 
-  // コンポーネントのマウント状態を管理
   useEffect(() => {
     setIsMounted(true);
-    return () => setIsMounted(false);
+    console.log('DisplayLock mounted');
+    return () => {
+      setIsMounted(false);
+      console.log('DisplayLock unmounted');
+    };
   }, []);
 
-  // 状態が変更されたときにrefを更新
   useEffect(() => {
-    if (!isMounted) return;
     isEnabledRef.current = isEnabled;
     warningThresholdRef.current = warningThreshold;
-  }, [isEnabled, warningThreshold, isMounted]);
-
-  // 通知の初期化と権限チェック
-  useEffect(() => {
-    if (!isMounted) return;
-
-    const checkNotificationPermission = () => {
-      if (typeof window !== 'undefined' && 'Notification' in window) {
-        setNotificationPermission(Notification.permission);
-      }
-    };
-
-    checkNotificationPermission();
-
-    return () => {
-      if (checkIntervalRef.current) {
-        clearInterval(checkIntervalRef.current);
-      }
-    };
-  }, [isMounted]);
+    console.log('State updated:', { isEnabled, warningThreshold });
+  }, [isEnabled, warningThreshold]);
 
   const getRandomMessage = useCallback((isLongAbsence = false) => {
     const messages = isLongAbsence ? [
@@ -67,18 +51,20 @@ const DisplayLockProvider = ({ children }) => {
       "It's time to get back into focus mode! ⏰",
       "Isn't the break too long? Come on, let's resume studying! 📚",
       `It's already been ${warningThreshold} minutes! Let's do our best! 💪`
-    ] : [
+      ] : [
       "Hey, you're supposed to be studying! 💪",
       "Don't escape to social media! 📵",
       "Come back! Focus! 🧐",
       "Not there, switch back the tab! 📚",
       "Now is the time to concentrate on learning! 🎯"
-    ];
+      ];
     return messages[Math.floor(Math.random() * messages.length)];
   }, [warningThreshold]);
 
   const showNotification = useCallback((message) => {
     if (!isMounted || typeof window === 'undefined') return;
+
+    console.log('Attempting to show notification:', message);
 
     if (!('Notification' in window)) {
       console.warn('Notifications not supported');
@@ -98,27 +84,10 @@ const DisplayLockProvider = ({ children }) => {
           window.focus();
           notification.close();
         };
+        console.log('Notification created successfully');
       } catch (error) {
         console.error('Failed to create notification:', error);
       }
-    }
-  }, [isMounted]);
-
-  const requestNotificationPermission = useCallback(async () => {
-    if (!isMounted || typeof window === 'undefined') return false;
-
-    if (!('Notification' in window)) {
-      console.warn('Notifications not supported');
-      return false;
-    }
-
-    try {
-      const permission = await Notification.requestPermission();
-      setNotificationPermission(permission);
-      return permission === 'granted';
-    } catch (error) {
-      console.error('Failed to request notification permission:', error);
-      return false;
     }
   }, [isMounted]);
 
@@ -127,48 +96,59 @@ const DisplayLockProvider = ({ children }) => {
 
     try {
       const domain = new URL(url).hostname;
-      return domain === ALLOWED_DOMAIN || domain === window.location.hostname;
-    } catch {
+      const isInternal = domain === ALLOWED_DOMAIN || domain === window.location.hostname;
+      console.log('Navigation check:', { url, domain, isInternal });
+      return isInternal;
+    } catch (error) {
+      console.error('URL parsing error:', error);
       return false;
     }
   }, [isMounted]);
 
-  // メイン機能の実装
+  // タブ切り替えと離脱時間の監視
   useEffect(() => {
-    if (!isMounted || typeof window === 'undefined') return;
+    if (!isMounted || typeof window === 'undefined' || !isEnabled) return;
 
-    // 設定の読み込み
-    try {
-      const savedSettings = localStorage.getItem('displayLockSettings');
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        setIsEnabled(settings.isEnabled || false);
-        setWarningThreshold(settings.warningThreshold || 10);
-      }
-    } catch (error) {
-      console.error('Failed to load settings:', error);
-    }
+    console.log('Setting up visibility change monitoring');
 
     const handleVisibilityChange = () => {
       if (!isEnabledRef.current) return;
 
       const currentTime = Date.now();
-      
+      console.log('Visibility changed:', { 
+        hidden: document.hidden, 
+        currentTime: new Date(currentTime).toISOString() 
+      });
+
       if (document.hidden) {
         setLeaveTime(currentTime);
         const isExternal = !isInternalNavigation(window.location.href);
         setIsExternalSite(isExternal);
-        
+        console.log('Tab hidden:', { isExternal, leaveTime: currentTime });
+
         if (isExternal) {
           const message = getRandomMessage();
+          console.log('Setting initial warning:', message);
           setWarningMessage(message);
           setShowWarning(true);
         }
       } else {
+        console.log('Tab visible again:', { 
+          leaveTime, 
+          isExternalSite, 
+          timeDiff: leaveTime ? (currentTime - leaveTime) / 1000 : 0 
+        });
+
         if (leaveTime && isExternalSite) {
           const timeDiff = currentTime - leaveTime;
+          console.log('Checking time difference:', {
+            timeDiff: timeDiff / 1000,
+            threshold: warningThresholdRef.current * 60
+          });
+
           if (timeDiff >= warningThresholdRef.current * 60 * 1000) {
             const message = getRandomMessage(true);
+            console.log('Setting long absence warning:', message);
             setWarningMessage(message);
             setShowWarning(true);
             showNotification(message);
@@ -179,117 +159,88 @@ const DisplayLockProvider = ({ children }) => {
       }
     };
 
-    const handleBeforeUnload = (event) => {
+    // 定期的なチェック
+    const checkTimer = setInterval(() => {
       if (!isEnabledRef.current) return;
-      
-      const targetUrl = event.target.activeElement?.href;
-      if (targetUrl && !isInternalNavigation(targetUrl)) {
-        setIsExternalSite(true);
-        setLeaveTime(Date.now());
+
+      const currentTime = Date.now();
+      if (document.hidden && leaveTime && isExternalSite) {
+        const timeDiff = currentTime - leaveTime;
+        console.log('Timer check:', {
+          currentTime: new Date(currentTime).toISOString(),
+          leaveTime: new Date(leaveTime).toISOString(),
+          timeDiff: timeDiff / 1000,
+          threshold: warningThresholdRef.current * 60
+        });
+
+        // 最後のチェックから一定時間経過している場合のみ警告を表示
+        if (timeDiff >= warningThresholdRef.current * 60 * 1000 &&
+            (!lastCheckedRef.current || currentTime - lastCheckedRef.current >= CHECK_INTERVAL)) {
+          const message = getRandomMessage(true);
+          console.log('Setting periodic warning:', message);
+          setWarningMessage(message);
+          setShowWarning(true);
+          showNotification(message);
+          lastCheckedRef.current = currentTime;
+        }
       }
-    };
+    }, CHECK_INTERVAL);
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    if (isEnabled) {
-      checkIntervalRef.current = setInterval(() => {
-        if (leaveTime && isExternalSite) {
-          const currentTime = Date.now();
-          const timeDiff = currentTime - leaveTime;
-          if (timeDiff >= warningThresholdRef.current * 60 * 1000) {
-            const message = getRandomMessage(true);
-            setWarningMessage(message);
-            setShowWarning(true);
-            showNotification(message);
-          }
-        }
-      }, CHECK_INTERVAL);
-    }
-
+    
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      if (checkIntervalRef.current) {
-        clearInterval(checkIntervalRef.current);
-      }
+      clearInterval(checkTimer);
+      console.log('Cleanup: removed event listeners and timer');
     };
-  }, [isMounted, isEnabled, getRandomMessage, showNotification, leaveTime, isExternalSite, isInternalNavigation]);
+  }, [isMounted, isEnabled, getRandomMessage, showNotification, isInternalNavigation]);
 
   const toggleDisplayLock = useCallback(async () => {
     if (!isMounted || typeof window === 'undefined') return;
 
     const newState = !isEnabled;
+    console.log('Toggling DisplayLock:', { newState });
+
     if (newState && notificationPermission === 'default') {
-      await requestNotificationPermission();
+      const granted = await Notification.requestPermission() === 'granted';
+      console.log('Requested notification permission:', { granted });
+      setNotificationPermission(granted ? 'granted' : 'denied');
     }
 
     setIsEnabled(newState);
+    setShowWarning(false);
+    setLeaveTime(null);
+    setIsExternalSite(false);
+
     try {
       localStorage.setItem('displayLockSettings', JSON.stringify({
         isEnabled: newState,
         warningThreshold
       }));
+      console.log('Settings saved to localStorage');
     } catch (error) {
       console.error('Failed to save settings:', error);
     }
+  }, [isMounted, isEnabled, notificationPermission, warningThreshold]);
 
-    setShowWarning(false);
-    setLeaveTime(null);
-    setIsExternalSite(false);
-
-    if (checkIntervalRef.current) {
-      clearInterval(checkIntervalRef.current);
-    }
-
-    if (newState) {
-      checkIntervalRef.current = setInterval(() => {
-        if (leaveTime && isExternalSite) {
-          const currentTime = Date.now();
-          const timeDiff = currentTime - leaveTime;
-          if (timeDiff >= warningThresholdRef.current * 60 * 1000) {
-            const message = getRandomMessage(true);
-            setWarningMessage(message);
-            setShowWarning(true);
-            showNotification(message);
-          }
-        }
-      }, CHECK_INTERVAL);
-    }
-  }, [isMounted, isEnabled, notificationPermission, warningThreshold, requestNotificationPermission, getRandomMessage, showNotification, leaveTime, isExternalSite]);
-
-  const updateSettings = useCallback((newWarningThreshold) => {
-    if (!isMounted || typeof window === 'undefined') return;
-
-    if (typeof newWarningThreshold !== 'number' || newWarningThreshold <= 0) {
-      console.error('Invalid warning threshold');
-      return;
-    }
-
-    setWarningThreshold(newWarningThreshold);
-    try {
-      localStorage.setItem('displayLockSettings', JSON.stringify({
-        isEnabled,
-        warningThreshold: newWarningThreshold
-      }));
-    } catch (error) {
-      console.error('Failed to save settings:', error);
-    }
-  }, [isMounted, isEnabled]);
-
+  // スタイリングを改善
   return (
     <DisplayLockContext.Provider value={{ 
       isEnabled, 
       toggleDisplayLock, 
       warningThreshold,
-      updateSettings,
+      updateSettings: setWarningThreshold,
       notificationPermission,
-      requestNotificationPermission 
+      requestNotificationPermission: async () => {
+        const result = await Notification.requestPermission();
+        setNotificationPermission(result);
+        return result === 'granted';
+      }
     }}>
       {children}
       {showWarning && (
-        <div className="warning-message">
-          <p className="warning-text">{warningMessage}</p>
+        <div className="fixed top-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg z-50">
+          <p className="font-bold">{warningMessage}</p>
         </div>
       )}
     </DisplayLockContext.Provider>
