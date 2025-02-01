@@ -26,9 +26,9 @@ const DisplayLockProvider = ({ children }) => {
   const warningThresholdRef = useRef(warningThreshold);
   const checkIntervalRef = useRef(null);
   const lastCheckedRef = useRef(null);
-
+  const lastUrlRef = useRef(typeof window !== 'undefined' ? window.location.href : '');
   const ALLOWED_DOMAIN = 'learnlooper.app';
-  const CHECK_INTERVAL = 5000; // デバッグ用に5秒に短縮
+  const CHECK_INTERVAL = 1000; // デバッグ用に1秒に短縮
 
   useEffect(() => {
     setIsMounted(true);
@@ -92,96 +92,133 @@ const DisplayLockProvider = ({ children }) => {
   }, [isMounted]);
 
   const isInternalNavigation = useCallback((url) => {
-    if (!isMounted || typeof window === 'undefined') return true;
-
+    if (!url || typeof window === 'undefined') return true;
     try {
-      const domain = new URL(url).hostname;
-      const isInternal = domain === ALLOWED_DOMAIN || domain === window.location.hostname;
-      console.log('Navigation check:', { url, domain, isInternal });
-      return isInternal;
+      const urlObj = new URL(url);
+      const currentDomain = window.location.hostname;
+      const targetDomain = urlObj.hostname;
+      
+      console.log('Domain check:', {
+        currentDomain,
+        targetDomain,
+        isInternal: targetDomain === ALLOWED_DOMAIN || targetDomain === currentDomain
+      });
+      
+      return targetDomain === ALLOWED_DOMAIN || targetDomain === currentDomain;
     } catch (error) {
       console.error('URL parsing error:', error);
       return false;
     }
-  }, [isMounted]);
+  }, []);
+  useEffect(() => {
+    if (!isMounted || typeof window === 'undefined' || !isEnabled) return;
+
+    const checkUrlChange = () => {
+      const currentUrl = window.location.href;
+      if (currentUrl !== lastUrlRef.current) {
+        console.log('URL changed:', { from: lastUrlRef.current, to: currentUrl });
+        const isExternal = !isInternalNavigation(currentUrl);
+        
+        if (isExternal) {
+          console.log('External navigation detected');
+          setLeaveTime(Date.now());
+          setIsExternalSite(true);
+          const message = getRandomMessage();
+          setWarningMessage(message);
+          setShowWarning(true);
+        }
+        
+        lastUrlRef.current = currentUrl;
+      }
+    };
+
+    // 定期的なURLチェック
+    const urlCheckInterval = setInterval(checkUrlChange, 500);
+    
+    return () => clearInterval(urlCheckInterval);
+  }, [isMounted, isEnabled, isInternalNavigation, getRandomMessage]);
 
   // タブ切り替えと離脱時間の監視
   useEffect(() => {
     if (!isMounted || typeof window === 'undefined' || !isEnabled) return;
 
-    console.log('Setting up visibility change monitoring');
+    console.log('Setting up visibility monitoring');
 
     const handleVisibilityChange = () => {
       if (!isEnabledRef.current) return;
 
       const currentTime = Date.now();
-      console.log('Visibility changed:', { 
-        hidden: document.hidden, 
-        currentTime: new Date(currentTime).toISOString() 
+      console.log('Visibility changed:', {
+        hidden: document.hidden,
+        currentTime: new Date(currentTime).toISOString()
       });
 
       if (document.hidden) {
-        setLeaveTime(currentTime);
-        const isExternal = !isInternalNavigation(window.location.href);
-        setIsExternalSite(isExternal);
-        console.log('Tab hidden:', { isExternal, leaveTime: currentTime });
+        // タブが非表示になった時
+        const currentUrl = window.location.href;
+        const isExternal = !isInternalNavigation(currentUrl);
+        
+        console.log('Tab hidden check:', {
+          currentUrl,
+          isExternal,
+          currentTime: new Date(currentTime).toISOString()
+        });
 
         if (isExternal) {
+          setLeaveTime(currentTime);
+          setIsExternalSite(true);
           const message = getRandomMessage();
-          console.log('Setting initial warning:', message);
           setWarningMessage(message);
           setShowWarning(true);
         }
       } else {
-        console.log('Tab visible again:', { 
-          leaveTime, 
-          isExternalSite, 
-          timeDiff: leaveTime ? (currentTime - leaveTime) / 1000 : 0 
-        });
-
+        // タブが表示された時
         if (leaveTime && isExternalSite) {
           const timeDiff = currentTime - leaveTime;
-          console.log('Checking time difference:', {
+          const thresholdMs = warningThresholdRef.current * 60 * 1000;
+          
+          console.log('Tab visible check:', {
             timeDiff: timeDiff / 1000,
-            threshold: warningThresholdRef.current * 60
+            threshold: thresholdMs / 1000,
+            exceededThreshold: timeDiff >= thresholdMs
           });
 
-          if (timeDiff >= warningThresholdRef.current * 60 * 1000) {
+          if (timeDiff >= thresholdMs) {
             const message = getRandomMessage(true);
-            console.log('Setting long absence warning:', message);
             setWarningMessage(message);
             setShowWarning(true);
             showNotification(message);
           }
         }
-        setLeaveTime(null);
-        setIsExternalSite(false);
+        // タブが表示された時の状態リセット
+        if (isInternalNavigation(window.location.href)) {
+          setLeaveTime(null);
+          setIsExternalSite(false);
+        }
       }
     };
 
-    // 定期的なチェック
+    // 定期的なチェック処理
     const checkTimer = setInterval(() => {
-      if (!isEnabledRef.current) return;
+      if (!isEnabledRef.current || !document.hidden) return;
 
       const currentTime = Date.now();
-      if (document.hidden && leaveTime && isExternalSite) {
+      if (leaveTime && isExternalSite) {
         const timeDiff = currentTime - leaveTime;
+        const thresholdMs = warningThresholdRef.current * 60 * 1000;
+        
         console.log('Timer check:', {
           currentTime: new Date(currentTime).toISOString(),
           leaveTime: new Date(leaveTime).toISOString(),
           timeDiff: timeDiff / 1000,
-          threshold: warningThresholdRef.current * 60
+          threshold: thresholdMs / 1000
         });
 
-        // 最後のチェックから一定時間経過している場合のみ警告を表示
-        if (timeDiff >= warningThresholdRef.current * 60 * 1000 &&
-            (!lastCheckedRef.current || currentTime - lastCheckedRef.current >= CHECK_INTERVAL)) {
+        if (timeDiff >= thresholdMs) {
           const message = getRandomMessage(true);
-          console.log('Setting periodic warning:', message);
           setWarningMessage(message);
           setShowWarning(true);
           showNotification(message);
-          lastCheckedRef.current = currentTime;
         }
       }
     }, CHECK_INTERVAL);
@@ -191,9 +228,8 @@ const DisplayLockProvider = ({ children }) => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       clearInterval(checkTimer);
-      console.log('Cleanup: removed event listeners and timer');
     };
-  }, [isMounted, isEnabled, getRandomMessage, showNotification, isInternalNavigation]);
+  }, [isMounted, isEnabled, getRandomMessage, showNotification, leaveTime, isExternalSite, isInternalNavigation]);
 
   const toggleDisplayLock = useCallback(async () => {
     if (!isMounted || typeof window === 'undefined') return;
@@ -225,9 +261,9 @@ const DisplayLockProvider = ({ children }) => {
 
   // スタイリングを改善
   return (
-    <DisplayLockContext.Provider value={{ 
-      isEnabled, 
-      toggleDisplayLock, 
+<DisplayLockContext.Provider value={{
+      isEnabled,
+      toggleDisplayLock,
       warningThreshold,
       updateSettings: setWarningThreshold,
       notificationPermission,
@@ -239,8 +275,21 @@ const DisplayLockProvider = ({ children }) => {
     }}>
       {children}
       {showWarning && (
-        <div className="fixed top-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg z-50">
-          <p className="font-bold">{warningMessage}</p>
+        <div className="fixed top-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg z-50 max-w-md">
+          <div className="flex items-start">
+            <div className="ml-3">
+              <p className="font-bold">{warningMessage}</p>
+            </div>
+            <button
+              onClick={() => setShowWarning(false)}
+              className="ml-auto -mx-1.5 -my-1.5 bg-red-100 text-red-500 rounded-lg p-1.5 hover:bg-red-200 inline-flex"
+            >
+              <span className="sr-only">Dismiss</span>
+              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
         </div>
       )}
     </DisplayLockContext.Provider>
