@@ -2,13 +2,14 @@ import Link from "next/link";
 import styles from "./HomePage.module.css";
 import Image from "next/image";
 import { RiTwitterXFill } from "react-icons/ri";
+
 export default function HomePage() {
   return (
     <div className={styles.container}>
       <div className={styles.headerWrapper}>
         <Image src="./icon.svg" height={45} width={45} alt="icon" />
         <div className={styles.title}>
-          Learn Looper
+          LearnLooper
         </div>
       </div>
       <main className={styles.main}>
@@ -44,10 +45,18 @@ export default function HomePage() {
               </p>
             </div>
           </Link>
+          <Link href="/tools/displaylock" className={styles.productItem}>
+            <div>
+              <h2 className={styles.productTitle}>Display Lock</h2>
+              <p className={styles.productDescription}>
+                Stay focused by preventing tab switching during study sessions.
+              </p>
+            </div>
+          </Link>
         </section>
 
         <section className={styles.articlesSection}>
-          <h2 className={styles.articlesTitle}>Articles &amp; FAQ</h2>
+        <h2 className={styles.articlesTitle}>Articles &amp; FAQ</h2>
           <p className={styles.articlesDescription}>
             Check out our helpful tips and information.
           </p>
@@ -57,7 +66,7 @@ export default function HomePage() {
         </section>
       </main>
       <div className={styles.footerMenu}>
-        <Link href="/">Home</Link>
+      <Link href="/">Home</Link>
         <Link href="/privacy">Privacy</Link>
         <Link href="/terms">Terms</Link>
         <Link href="/contact">Contact</Link>

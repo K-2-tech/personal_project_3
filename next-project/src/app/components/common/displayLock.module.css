@@ -1,0 +1,86 @@
+
+.display-lock-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .display-lock-button.enabled {
+    background-color: #22c55e;
+    color: white;
+  }
+  
+  .display-lock-button.disabled {
+    background-color: #e5e7eb;
+    color: #374151;
+  }
+  
+  .display-lock-button:hover.enabled {
+    background-color: #16a34a;
+  }
+  
+  .display-lock-button:hover.disabled {
+    background-color: #d1d5db;
+  }
+  
+  .display-lock-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .warning-message {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    max-width: 400px;
+    padding: 16px;
+    background-color: #fef9c3;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    animation: bounce 1s infinite;
+  }
+  
+  .warning-text {
+    font-size: 18px;
+    font-weight: bold;
+    color: #92400e;
+    margin: 0;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .display-lock-button.disabled {
+      background-color: #374151;
+      color: #e5e7eb;
+    }
+    
+    .display-lock-button:hover.disabled {
+      background-color: #4b5563;
+    }
+  
+    .warning-message {
+      background-color: #78350f;
+      border-color: #f59e0b;
+    }
+  
+    .warning-text {
+      color: #fef9c3;
+    }
+  }
+  
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }

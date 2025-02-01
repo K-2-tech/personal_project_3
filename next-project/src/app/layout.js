@@ -1,7 +1,7 @@
 import React from "react";
 import Script from "next/script";
 import HotjarProvider from './components/common/HotjarProvider';
-
+import DisplayLockProvider from './components/common/DisplayLockProvider';
 const metadata = {
   language: 'en',
   title: "Learn Looper | Boost Learning Efficiency with Pomodoro & AB Loop",
@@ -65,7 +65,11 @@ export default function RootLayout({ children }) {
           `}
         </Script>
       </head>
-      <body>{children}</body>
+      <body>
+        <DisplayLockProvider>
+          {children}
+        </DisplayLockProvider>
+      </body>
     </html>
   );
 }
