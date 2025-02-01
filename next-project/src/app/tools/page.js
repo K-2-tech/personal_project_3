@@ -44,6 +44,14 @@ export default function HomePage() {
               </p>
             </div>
           </Link>
+          <Link href="/tools/displaylock" className={styles.productItem}>
+            <div>
+              <h2 className={styles.productTitle}>Display Lock</h2>
+              <p className={styles.productDescription}>
+                Stay focused by preventing tab switching during study sessions.
+              </p>
+            </div>
+          </Link>
         </section>
       </main>
       <div className={styles.footerMenu}>
