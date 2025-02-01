@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import styles from './DisplayLockPage.module.css';
 import Header from "../../components/common/Header"
-import Footer from "../../components/common/HFooter"
+import Footer from "../../components/common/Footer"
 // クライアントサイドでのみ読み込むコンポーネント
 const DisplayLock = dynamic(
   () => import('../../components/displaylock/DisplayLock'),
