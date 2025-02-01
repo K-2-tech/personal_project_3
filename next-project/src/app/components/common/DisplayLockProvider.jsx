@@ -29,7 +29,7 @@ const DisplayLockProvider = ({ children }) => {
   const documentHiddenRef = useRef(false);
 
   const ALLOWED_DOMAIN = 'learnlooper.app';
-  const CHECK_INTERVAL = 1000; // Check every second
+  const CHECK_INTERVAL = 5000; // Check every 5 seconds
 
   // Update refs when state changes
   useEffect(() => {
@@ -87,49 +87,38 @@ const DisplayLockProvider = ({ children }) => {
 
   const showNotification = useCallback((message) => {
     if (!isMounted || typeof window === 'undefined') return;
-  
-    if ('Notification' in window && Notification.permission === 'granted') {
-      try {
-        // 既存の通知をクローズ
-        const existingNotification = document.querySelector('[data-notification-id="learnlooper-warning"]');
-        if (existingNotification) {
-          existingNotification.close();
+
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      // モバイルの場合は画面上部に固定のアラートを表示
+      setWarningMessage(message);
+      setShowWarning(true);
+      // 可能であればバイブレーションを実行
+      if ('vibrate' in navigator) {
+        navigator.vibrate([200, 100, 200]);
+      }
+    } else {
+      // PCの場合は通常の通知を使用
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          const notification = new Notification('LearnLooper', {
+            body: message,
+            icon: '/icon.svg',
+            tag: 'learnlooper-warning',
+            requireInteraction: true,
+          });
+
+          notification.onclick = () => {
+            window.focus();
+            notification.close();
+          };
+        } catch (error) {
+          console.error('Failed to show notification:', error);
+          // 通知が失敗した場合はフォールバックとして画面上部に表示
+          setWarningMessage(message);
+          setShowWarning(true);
         }
-  
-        const notification = new Notification('LearnLooper - 勉強に戻りましょう！', {
-          body: message,
-          icon: '/icon.svg',
-          tag: 'learnlooper-warning',
-          requireInteraction: true, // ユーザーが明示的に閉じるまで表示され続ける
-          badge: '/icon.svg',      // モバイルデバイスでの小さいアイコン
-          vibrate: [200, 100, 200], // バイブレーションパターン
-          // サウンドも追加可能ですが、ユーザーを驚かせないよう慎重に検討する必要があります
-          // sound: '/notification-sound.wav'
-        });
-  
-        // 通知がクリックされたときの処理
-        notification.onclick = () => {
-          // LearnLooperのタブをアクティブにする
-          window.focus();
-          // 特定のタブにフォーカスを移動（必要な場合）
-          if (window.opener) {
-            window.opener.focus();
-          }
-          notification.close();
-        };
-  
-        // 通知が閉じられたときの処理
-        notification.onclose = () => {
-          console.log('Notification was closed');
-        };
-  
-        // エラーハンドリング
-        notification.onerror = (error) => {
-          console.error('Notification error:', error);
-        };
-  
-      } catch (error) {
-        console.error('Failed to show notification:', error);
       }
     }
   }, [isMounted]);
@@ -245,6 +234,7 @@ const DisplayLockProvider = ({ children }) => {
     }
   }, [isMounted, isEnabled, notificationPermission, warningThreshold]);
 
+
   return (
     <DisplayLockContext.Provider value={{
       isEnabled,
@@ -252,25 +242,21 @@ const DisplayLockProvider = ({ children }) => {
       warningThreshold,
       updateSettings: setWarningThreshold,
       notificationPermission,
-      requestNotificationPermission: async () => {
-        if (typeof window === 'undefined') return false;
-        const permission = await Notification.requestPermission();
-        setNotificationPermission(permission);
-        return permission === 'granted';
-      }
+      requestNotificationPermission
     }}>
       {children}
       {showWarning && (
-        <div className="fixed top-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg z-50 max-w-md">
-          <div className="flex items-start">
-            <div className="ml-3">
+        <div className="fixed top-0 left-0 right-0 bg-red-500 text-white p-4 shadow-lg z-50">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <div className="flex items-center">
+              <span className="mr-2">⚠️</span>
               <p className="font-bold">{warningMessage}</p>
             </div>
             <button
               onClick={() => setShowWarning(false)}
-              className="ml-auto -mx-1.5 -my-1.5 bg-red-100 text-red-500 rounded-lg p-1.5 hover:bg-red-200 inline-flex"
+              className="text-white hover:text-red-100"
             >
-              <span className="sr-only">Dismiss</span>
+              <span className="sr-only">CLOSE</span>
               <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
@@ -281,5 +267,7 @@ const DisplayLockProvider = ({ children }) => {
     </DisplayLockContext.Provider>
   );
 };
+  
+
 
 export default DisplayLockProvider;
