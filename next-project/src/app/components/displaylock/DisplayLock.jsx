@@ -2,7 +2,7 @@
 import React from 'react';
 import { useDisplayLock } from '../common/DisplayLockProvider';
 
-const DisplayLockControl = () => {
+const DisplayLock = () => {
   const { isEnabled, toggleDisplayLock } = useDisplayLock();
 
   return (
@@ -18,4 +18,4 @@ const DisplayLockControl = () => {
   );
 };
 
-export default DisplayLockControl;
+export default DisplayLock;

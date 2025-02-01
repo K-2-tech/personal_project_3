@@ -8,7 +8,7 @@ import AudioPlayerList from '../../components/audioloop/AudioPlayerList';
 import LoopControls from '../../components/audioloop/LoopControls';
 import AudioPlayer from '../../components/audioloop/AudioPlayer'
 import styles from './AudioLoopPage.module.css';
-import DisplayLockControl from '../../components/displaylockcontrol/DisplayLockControl';
+import DisplayLockControl from '../../components/displaylock/DisplayLock';
 export default function AudioLoopPage() {
   const [audioFiles, setAudioFiles] = useState([]);
   const [isRandomPlay, setIsRandomPlay] = useState(false);
