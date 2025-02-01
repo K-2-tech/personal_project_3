@@ -87,24 +87,47 @@ const DisplayLockProvider = ({ children }) => {
 
   const showNotification = useCallback((message) => {
     if (!isMounted || typeof window === 'undefined') return;
-
-    console.log('Attempting to show notification:', message);
-
+  
     if ('Notification' in window && Notification.permission === 'granted') {
       try {
-        const notification = new Notification('LearnLooper', {
+        // 既存の通知をクローズ
+        const existingNotification = document.querySelector('[data-notification-id="learnlooper-warning"]');
+        if (existingNotification) {
+          existingNotification.close();
+        }
+  
+        const notification = new Notification('LearnLooper - 勉強に戻りましょう！', {
           body: message,
           icon: '/icon.svg',
           tag: 'learnlooper-warning',
-          requireInteraction: true,
+          requireInteraction: true, // ユーザーが明示的に閉じるまで表示され続ける
+          badge: '/icon.svg',      // モバイルデバイスでの小さいアイコン
+          vibrate: [200, 100, 200], // バイブレーションパターン
+          // サウンドも追加可能ですが、ユーザーを驚かせないよう慎重に検討する必要があります
+          // sound: '/notification-sound.wav'
         });
-
+  
+        // 通知がクリックされたときの処理
         notification.onclick = () => {
+          // LearnLooperのタブをアクティブにする
           window.focus();
+          // 特定のタブにフォーカスを移動（必要な場合）
+          if (window.opener) {
+            window.opener.focus();
+          }
           notification.close();
         };
-
-        console.log('Notification shown successfully');
+  
+        // 通知が閉じられたときの処理
+        notification.onclose = () => {
+          console.log('Notification was closed');
+        };
+  
+        // エラーハンドリング
+        notification.onerror = (error) => {
+          console.error('Notification error:', error);
+        };
+  
       } catch (error) {
         console.error('Failed to show notification:', error);
       }
