@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import DisplayLock from '../../displaylock/DisplayLock';
-import { useDisplayLock } from '../../common/DisplayLockProvider';
+import DisplayLock from '../../components/displaylock/DisplayLock';
+import { useDisplayLock } from '../../components/common/DisplayLockProvider';
 import styles from './DisplayLockPage.module.css';
 
 export default function DisplayLockPage() {
