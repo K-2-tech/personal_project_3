@@ -1,6 +1,6 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import '../styles/displayLock.css';
+import "./DisplayLock.module.css"
 
 const DisplayLockContext = createContext(null);
 

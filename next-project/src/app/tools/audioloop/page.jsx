@@ -8,7 +8,7 @@ import AudioPlayerList from '../../components/audioloop/AudioPlayerList';
 import LoopControls from '../../components/audioloop/LoopControls';
 import AudioPlayer from '../../components/audioloop/AudioPlayer'
 import styles from './AudioLoopPage.module.css';
-import DisplayLockControl from '../../components/displaylock/DisplayLock';
+import DisplayLock from '../../components/displaylock/DisplayLock';
 export default function AudioLoopPage() {
   const [audioFiles, setAudioFiles] = useState([]);
   const [isRandomPlay, setIsRandomPlay] = useState(false);
@@ -33,7 +33,7 @@ export default function AudioLoopPage() {
   };
 
   return (
-    <><Header /><DisplayLockControl/><div className={styles.container}>
+    <><Header /><DisplayLock/><div className={styles.container}>
     <div className={styles.card}>
       <h1 className={styles.title}>
         📁 LearnLooper: Multiple Audio Files Loop Tool

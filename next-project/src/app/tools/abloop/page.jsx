@@ -2,13 +2,13 @@ import React from "react";
 import Header from "../../components/common/Header";
 import Footer from "../../components/common/Footer";
 import YouTubeABLoop from "../../components/abloop/YoutubeLoop";
-import DisplayLockControl from '../../components/displaylock/DisplayLock';
+import DisplayLock from '../../components/displaylock/DisplayLock';
 
 const YAB = () => {
   return (
     <>
         <Header />
-        <DisplayLockControl/>
+        <DisplayLock/>
         <YouTubeABLoop />
         <Footer />
     </>
