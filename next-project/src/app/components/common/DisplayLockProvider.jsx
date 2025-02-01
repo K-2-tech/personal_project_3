@@ -16,34 +16,58 @@ const DisplayLockProvider = ({ children }) => {
   const [isEnabled, setIsEnabled] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState('');
-  const [leaveTime, setLeaveTime] = useState(null);
-  const [isExternalSite, setIsExternalSite] = useState(false);
   const [warningThreshold, setWarningThreshold] = useState(10);
   const [notificationPermission, setNotificationPermission] = useState('default');
   const [isMounted, setIsMounted] = useState(false);
 
+  // Refs for tracking state
   const isEnabledRef = useRef(isEnabled);
   const warningThresholdRef = useRef(warningThreshold);
-  const checkIntervalRef = useRef(null);
-  const lastCheckedRef = useRef(null);
-  const lastUrlRef = useRef(typeof window !== 'undefined' ? window.location.href : '');
-  const ALLOWED_DOMAIN = 'learnlooper.app';
-  const CHECK_INTERVAL = 1000; // デバッグ用に1秒に短縮
+  const leaveTimeRef = useRef(null);
+  const lastActiveTimeRef = useRef(Date.now());
+  const focusIntervalRef = useRef(null);
+  const documentHiddenRef = useRef(false);
 
+  const ALLOWED_DOMAIN = 'learnlooper.app';
+  const CHECK_INTERVAL = 1000; // Check every second
+
+  // Update refs when state changes
+  useEffect(() => {
+    isEnabledRef.current = isEnabled;
+    warningThresholdRef.current = warningThreshold;
+  }, [isEnabled, warningThreshold]);
+
+  // Component mount handling
   useEffect(() => {
     setIsMounted(true);
     console.log('DisplayLock mounted');
+
+    // Load saved settings
+    if (typeof window !== 'undefined') {
+      try {
+        const savedSettings = localStorage.getItem('displayLockSettings');
+        if (savedSettings) {
+          const settings = JSON.parse(savedSettings);
+          setIsEnabled(settings.isEnabled || false);
+          setWarningThreshold(settings.warningThreshold || 10);
+        }
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+      }
+    }
+
     return () => {
       setIsMounted(false);
       console.log('DisplayLock unmounted');
     };
   }, []);
 
+  // Notification permission check
   useEffect(() => {
-    isEnabledRef.current = isEnabled;
-    warningThresholdRef.current = warningThreshold;
-    console.log('State updated:', { isEnabled, warningThreshold });
-  }, [isEnabled, warningThreshold]);
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
 
   const getRandomMessage = useCallback((isLongAbsence = false) => {
     const messages = isLongAbsence ? [
@@ -66,12 +90,7 @@ const DisplayLockProvider = ({ children }) => {
 
     console.log('Attempting to show notification:', message);
 
-    if (!('Notification' in window)) {
-      console.warn('Notifications not supported');
-      return;
-    }
-
-    if (Notification.permission === 'granted') {
+    if ('Notification' in window && Notification.permission === 'granted') {
       try {
         const notification = new Notification('LearnLooper', {
           body: message,
@@ -84,152 +103,96 @@ const DisplayLockProvider = ({ children }) => {
           window.focus();
           notification.close();
         };
-        console.log('Notification created successfully');
+
+        console.log('Notification shown successfully');
       } catch (error) {
-        console.error('Failed to create notification:', error);
+        console.error('Failed to show notification:', error);
       }
     }
   }, [isMounted]);
 
-  const isInternalNavigation = useCallback((url) => {
-    if (!url || typeof window === 'undefined') return true;
-    try {
-      const urlObj = new URL(url);
-      const currentDomain = window.location.hostname;
-      const targetDomain = urlObj.hostname;
-      
-      console.log('Domain check:', {
-        currentDomain,
-        targetDomain,
-        isInternal: targetDomain === ALLOWED_DOMAIN || targetDomain === currentDomain
-      });
-      
-      return targetDomain === ALLOWED_DOMAIN || targetDomain === currentDomain;
-    } catch (error) {
-      console.error('URL parsing error:', error);
-      return false;
-    }
-  }, []);
-  useEffect(() => {
-    if (!isMounted || typeof window === 'undefined' || !isEnabled) return;
+  const checkFocusAndActivity = useCallback(() => {
+    if (!isEnabledRef.current) return;
 
-    const checkUrlChange = () => {
-      const currentUrl = window.location.href;
-      if (currentUrl !== lastUrlRef.current) {
-        console.log('URL changed:', { from: lastUrlRef.current, to: currentUrl });
-        const isExternal = !isInternalNavigation(currentUrl);
-        
-        if (isExternal) {
-          console.log('External navigation detected');
-          setLeaveTime(Date.now());
-          setIsExternalSite(true);
-          const message = getRandomMessage();
-          setWarningMessage(message);
-          setShowWarning(true);
-        }
-        
-        lastUrlRef.current = currentUrl;
-      }
-    };
-
-    // 定期的なURLチェック
-    const urlCheckInterval = setInterval(checkUrlChange, 500);
+    const currentTime = Date.now();
+    const isLearnLooper = window.location.hostname === ALLOWED_DOMAIN;
+    const isDocumentHidden = document.hidden;
     
-    return () => clearInterval(urlCheckInterval);
-  }, [isMounted, isEnabled, isInternalNavigation, getRandomMessage]);
+    console.log('Focus check:', {
+      isLearnLooper,
+      isDocumentHidden,
+      lastActiveTime: new Date(lastActiveTimeRef.current).toISOString(),
+      currentTime: new Date(currentTime).toISOString(),
+    });
 
-  // タブ切り替えと離脱時間の監視
+    // If we're on LearnLooper, reset the timer
+    if (isLearnLooper && !isDocumentHidden) {
+      leaveTimeRef.current = null;
+      lastActiveTimeRef.current = currentTime;
+      setShowWarning(false);
+      return;
+    }
+
+    // If this is the first time we're leaving LearnLooper
+    if (!leaveTimeRef.current && (!isLearnLooper || isDocumentHidden)) {
+      leaveTimeRef.current = currentTime;
+      console.log('Started tracking leave time:', new Date(currentTime).toISOString());
+      
+      // Show initial warning
+      const message = getRandomMessage(false);
+      setWarningMessage(message);
+      setShowWarning(true);
+      return;
+    }
+
+    // If we're already away from LearnLooper, check the duration
+    if (leaveTimeRef.current) {
+      const timeDiff = currentTime - leaveTimeRef.current;
+      const thresholdMs = warningThresholdRef.current * 60 * 1000;
+
+      console.log('Time check:', {
+        timeDiff: timeDiff / 1000,
+        threshold: thresholdMs / 1000,
+        exceededThreshold: timeDiff >= thresholdMs
+      });
+
+      if (timeDiff >= thresholdMs) {
+        const message = getRandomMessage(true);
+        setWarningMessage(message);
+        setShowWarning(true);
+        showNotification(message);
+      }
+    }
+  }, [getRandomMessage, showNotification]);
+
+  // Set up activity monitoring
   useEffect(() => {
     if (!isMounted || typeof window === 'undefined' || !isEnabled) return;
 
-    console.log('Setting up visibility monitoring');
+    console.log('Setting up activity monitoring');
 
     const handleVisibilityChange = () => {
-      if (!isEnabledRef.current) return;
-
-      const currentTime = Date.now();
-      console.log('Visibility changed:', {
-        hidden: document.hidden,
-        currentTime: new Date(currentTime).toISOString()
-      });
-
-      if (document.hidden) {
-        // タブが非表示になった時
-        const currentUrl = window.location.href;
-        const isExternal = !isInternalNavigation(currentUrl);
-        
-        console.log('Tab hidden check:', {
-          currentUrl,
-          isExternal,
-          currentTime: new Date(currentTime).toISOString()
-        });
-
-        if (isExternal) {
-          setLeaveTime(currentTime);
-          setIsExternalSite(true);
-          const message = getRandomMessage();
-          setWarningMessage(message);
-          setShowWarning(true);
-        }
-      } else {
-        // タブが表示された時
-        if (leaveTime && isExternalSite) {
-          const timeDiff = currentTime - leaveTime;
-          const thresholdMs = warningThresholdRef.current * 60 * 1000;
-          
-          console.log('Tab visible check:', {
-            timeDiff: timeDiff / 1000,
-            threshold: thresholdMs / 1000,
-            exceededThreshold: timeDiff >= thresholdMs
-          });
-
-          if (timeDiff >= thresholdMs) {
-            const message = getRandomMessage(true);
-            setWarningMessage(message);
-            setShowWarning(true);
-            showNotification(message);
-          }
-        }
-        // タブが表示された時の状態リセット
-        if (isInternalNavigation(window.location.href)) {
-          setLeaveTime(null);
-          setIsExternalSite(false);
-        }
-      }
+      documentHiddenRef.current = document.hidden;
+      checkFocusAndActivity();
     };
 
-    // 定期的なチェック処理
-    const checkTimer = setInterval(() => {
-      if (!isEnabledRef.current || !document.hidden) return;
+    const handleActivityCheck = () => {
+      checkFocusAndActivity();
+    };
 
-      const currentTime = Date.now();
-      if (leaveTime && isExternalSite) {
-        const timeDiff = currentTime - leaveTime;
-        const thresholdMs = warningThresholdRef.current * 60 * 1000;
-        
-        console.log('Timer check:', {
-          currentTime: new Date(currentTime).toISOString(),
-          leaveTime: new Date(leaveTime).toISOString(),
-          timeDiff: timeDiff / 1000,
-          threshold: thresholdMs / 1000
-        });
+    // Set up periodic checks
+    focusIntervalRef.current = setInterval(handleActivityCheck, CHECK_INTERVAL);
 
-        if (timeDiff >= thresholdMs) {
-          const message = getRandomMessage(true);
-          setWarningMessage(message);
-          setShowWarning(true);
-          showNotification(message);
-        }
-      }
-    }, CHECK_INTERVAL);
-
+    // Set up visibility change listener
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+
     return () => {
+      if (focusIntervalRef.current) {
+        clearInterval(focusIntervalRef.current);
+      }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      clearInterval(checkTimer);
     };
-  }, [isMounted, isEnabled, getRandomMessage, showNotification, leaveTime, isExternalSite, isInternalNavigation]);
+  }, [isMounted, isEnabled, checkFocusAndActivity]);
 
   const toggleDisplayLock = useCallback(async () => {
     if (!isMounted || typeof window === 'undefined') return;
@@ -238,39 +201,39 @@ const DisplayLockProvider = ({ children }) => {
     console.log('Toggling DisplayLock:', { newState });
 
     if (newState && notificationPermission === 'default') {
-      const granted = await Notification.requestPermission() === 'granted';
-      console.log('Requested notification permission:', { granted });
-      setNotificationPermission(granted ? 'granted' : 'denied');
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
     }
 
     setIsEnabled(newState);
+    // Reset all tracking state
+    leaveTimeRef.current = null;
+    lastActiveTimeRef.current = Date.now();
     setShowWarning(false);
-    setLeaveTime(null);
-    setIsExternalSite(false);
 
+    // Save settings
     try {
       localStorage.setItem('displayLockSettings', JSON.stringify({
         isEnabled: newState,
         warningThreshold
       }));
-      console.log('Settings saved to localStorage');
     } catch (error) {
       console.error('Failed to save settings:', error);
     }
   }, [isMounted, isEnabled, notificationPermission, warningThreshold]);
 
-  // スタイリングを改善
   return (
-<DisplayLockContext.Provider value={{
+    <DisplayLockContext.Provider value={{
       isEnabled,
       toggleDisplayLock,
       warningThreshold,
       updateSettings: setWarningThreshold,
       notificationPermission,
       requestNotificationPermission: async () => {
-        const result = await Notification.requestPermission();
-        setNotificationPermission(result);
-        return result === 'granted';
+        if (typeof window === 'undefined') return false;
+        const permission = await Notification.requestPermission();
+        setNotificationPermission(permission);
+        return permission === 'granted';
       }
     }}>
       {children}
