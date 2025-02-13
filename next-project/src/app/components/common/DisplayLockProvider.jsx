@@ -13,7 +13,6 @@ export const useDisplayLock = () => {
 };
 
 const DisplayLockProvider = ({ children }) => {
-  // ... 既存のstate定義は維持 ...
   const [isEnabled, setIsEnabled] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState('');
@@ -45,6 +44,41 @@ const DisplayLockProvider = ({ children }) => {
     'pinterest.com',
     'reddit.com'
   ];
+
+  // 通知を送る関数を追加
+  const showNotification = useCallback((message) => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      console.log('Notifications not supported');
+      return;
+    }
+
+    if (Notification.permission === 'granted') {
+      try {
+        new Notification('LearnLooper Focus Alert', {
+          body: message,
+          icon: '/favicon.ico', // あなたのサイトのfaviconパスに変更してください
+        });
+      } catch (error) {
+        console.error('Failed to show notification:', error);
+      }
+    }
+  }, []);
+
+  // 通知の許可を要求する関数を追加
+  const requestNotificationPermission = useCallback(async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      return;
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      return permission;
+    } catch (error) {
+      console.error('Failed to request notification permission:', error);
+      return 'denied';
+    }
+  }, []);
 
   // ドメインチェック関数
   const checkDomain = useCallback((hostname) => {
@@ -141,6 +175,42 @@ const DisplayLockProvider = ({ children }) => {
     }
   }, [getRandomMessage, showNotification, checkDomain]);
 
+  // isEnabledの変更を追跡
+  useEffect(() => {
+    isEnabledRef.current = isEnabled;
+  }, [isEnabled]);
+
+  // warningThresholdの変更を追跡
+  useEffect(() => {
+    warningThresholdRef.current = warningThreshold;
+  }, [warningThreshold]);
+
+  // コンポーネントのマウント状態を設定
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
+  // 初期設定の読み込み
+  useEffect(() => {
+    if (!isMounted || typeof window === 'undefined') return;
+
+    try {
+      const savedSettings = localStorage.getItem('displayLockSettings');
+      if (savedSettings) {
+        const { isEnabled: savedIsEnabled, warningThreshold: savedThreshold } = JSON.parse(savedSettings);
+        setIsEnabled(savedIsEnabled);
+        setWarningThreshold(savedThreshold);
+      }
+
+      // 通知の許可状態を確認
+      if ('Notification' in window) {
+        setNotificationPermission(Notification.permission);
+      }
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+    }
+  }, [isMounted]);
 
   // Set up activity monitoring
   useEffect(() => {
@@ -178,7 +248,7 @@ const DisplayLockProvider = ({ children }) => {
     console.log('Toggling DisplayLock:', { newState });
 
     if (newState && notificationPermission === 'default') {
-      const permission = await Notification.requestPermission();
+      const permission = await requestNotificationPermission();
       setNotificationPermission(permission);
     }
 
@@ -197,8 +267,7 @@ const DisplayLockProvider = ({ children }) => {
     } catch (error) {
       console.error('Failed to save settings:', error);
     }
-  }, [isMounted, isEnabled, notificationPermission, warningThreshold]);
-
+  }, [isMounted, isEnabled, notificationPermission, warningThreshold, requestNotificationPermission]);
 
   return (
     <DisplayLockContext.Provider value={{
