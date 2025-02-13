@@ -13,6 +13,7 @@ export const useDisplayLock = () => {
 };
 
 const DisplayLockProvider = ({ children }) => {
+  // ... 既存のstate定義は維持 ...
   const [isEnabled, setIsEnabled] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState('');
@@ -20,7 +21,7 @@ const DisplayLockProvider = ({ children }) => {
   const [notificationPermission, setNotificationPermission] = useState('default');
   const [isMounted, setIsMounted] = useState(false);
 
-  // Refs for tracking state
+  // Refs
   const isEnabledRef = useRef(isEnabled);
   const warningThresholdRef = useRef(warningThreshold);
   const leaveTimeRef = useRef(null);
@@ -29,136 +30,76 @@ const DisplayLockProvider = ({ children }) => {
   const documentHiddenRef = useRef(false);
 
   const ALLOWED_DOMAIN = 'learnlooper.app';
-  const CHECK_INTERVAL = 5000; // Check every 5 seconds
+  const CHECK_INTERVAL = 5000;
 
-  // Update refs when state changes
-  useEffect(() => {
-    isEnabledRef.current = isEnabled;
-    warningThresholdRef.current = warningThreshold;
-  }, [isEnabled, warningThreshold]);
+  // SNSドメインのリスト
+  const SNS_DOMAINS = [
+    'twitter.com',
+    'x.com',
+    'facebook.com',
+    'instagram.com',
+    'tiktok.com',
+    'linkedin.com',
+    'youtube.com',
+    'line.me',
+    'pinterest.com',
+    'reddit.com'
+  ];
 
-  // Component mount handling
-  useEffect(() => {
-    setIsMounted(true);
-    console.log('DisplayLock mounted');
+  // ドメインチェック関数
+  const checkDomain = useCallback((hostname) => {
+    return SNS_DOMAINS.some(domain => 
+      hostname === domain || hostname.endsWith('.' + domain)
+    );
+  }, []);
 
-    // Load saved settings
-    if (typeof window !== 'undefined') {
-      try {
-        const savedSettings = localStorage.getItem('displayLockSettings');
-        if (savedSettings) {
-          const settings = JSON.parse(savedSettings);
-          setIsEnabled(settings.isEnabled || false);
-          setWarningThreshold(settings.warningThreshold || 10);
-        }
-      } catch (error) {
-        console.error('Failed to load settings:', error);
-      }
-    }
-
-    return () => {
-      setIsMounted(false);
-      console.log('DisplayLock unmounted');
+  // 既存のgetRandomMessage関数を拡張
+  const getRandomMessage = useCallback((messageType = 'default') => {
+    const messages = {
+      sns: [
+        "Social media is the enemy of studying! Get back now! 🚫",
+        "Use this time for studying instead of social media! 📚",
+        "Now is not the time for social media! 🎯",
+        "Don't break your concentration! Save social media for later! 💪"
+      ],
+      longAbsence: [
+        `It's been over ${warningThreshold} minutes! Time to get back to studying! 😤`,
+        "Time to return to focus mode! ⏰",
+        "Isn't this break too long? Let's resume studying! 📚",
+        `${warningThreshold} minutes have passed! Let's keep going! 💪`
+      ],
+      default: [
+        "Aren't you supposed to be studying? 💪",
+        "Don't escape to other tabs! 📵",
+        "Come back! Stay focused! 🧐",
+        "Wrong tab! Switch back to studying! 📚",
+        "Now is the time to focus on learning! 🎯"
+      ]
     };
-  }, []);
 
-  // Notification permission check
-  useEffect(() => {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      setNotificationPermission(Notification.permission);
-    }
-  }, []);
-
-  const getRandomMessage = useCallback((isLongAbsence = false) => {
-    const messages = isLongAbsence ? [
-      `It's been over ${warningThreshold} minutes! Let's get back to studying! 😤`,
-      "It's time to get back into focus mode! ⏰",
-      "Isn't the break too long? Come on, let's resume studying! 📚",
-      `It's already been ${warningThreshold} minutes! Let's do our best! 💪`
-      ] : [
-      "Hey, you're supposed to be studying! 💪",
-      "Don't escape to social media! 📵",
-      "Come back! Focus! 🧐",
-      "Not there, switch back the tab! 📚",
-      "Now is the time to concentrate on learning! 🎯"
-      ];
-    return messages[Math.floor(Math.random() * messages.length)];
+    const messageArray = messages[messageType] || messages.default;
+    return messageArray[Math.floor(Math.random() * messageArray.length)];
   }, [warningThreshold]);
-  const requestNotificationPermission = useCallback(async () => {
-    if (!isMounted || typeof window === 'undefined') return false;
 
-    if ('Notification' in window) {
-      try {
-        const permission = await Notification.requestPermission();
-        setNotificationPermission(permission);
-        return permission === 'granted';
-      } catch (error) {
-        console.error('Failed to request notification permission:', error);
-        return false;
-      }
-    } else {
-      console.warn('Notifications not supported in this browser');
-      return false;
-    }
-  }, [isMounted]);
-  const showNotification = useCallback((message) => {
-    if (!isMounted || typeof window === 'undefined') return;
-
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-    if (isMobile) {
-      // モバイルの場合は画面上部に固定のアラートを表示
-      setWarningMessage(message);
-      setShowWarning(true);
-      // 可能であればバイブレーションを実行
-      if ('vibrate' in navigator) {
-        navigator.vibrate([200, 100, 200]);
-      }
-    } else {
-      // PCの場合は通常の通知を使用
-      if ('Notification' in window && Notification.permission === 'granted') {
-        try {
-          const notification = new Notification('LearnLooper', {
-            body: message,
-            icon: '/icon.svg',
-            tag: 'learnlooper-warning',
-            requireInteraction: true,
-          });
-
-          notification.onclick = () => {
-            window.focus();
-            notification.close();
-          };
-        } catch (error) {
-          console.error('Failed to show notification:', error);
-          // 通知が失敗した場合はフォールバックとして画面上部に表示
-          setWarningMessage(message);
-          setShowWarning(true);
-        }
-      }
-    }
-  }, [isMounted]);
-   // 初期化時の通知許可チェック
-   useEffect(() => {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      setNotificationPermission(Notification.permission);
-    }
-  }, []);
+  // checkFocusAndActivity関数を更新
   const checkFocusAndActivity = useCallback(() => {
     if (!isEnabledRef.current) return;
 
     const currentTime = Date.now();
-    const isLearnLooper = window.location.hostname === ALLOWED_DOMAIN;
+    const currentHostname = window.location.hostname;
+    const isLearnLooper = currentHostname === ALLOWED_DOMAIN;
     const isDocumentHidden = document.hidden;
+    const isSNS = checkDomain(currentHostname);
     
     console.log('Focus check:', {
       isLearnLooper,
       isDocumentHidden,
+      isSNS,
       lastActiveTime: new Date(lastActiveTimeRef.current).toISOString(),
       currentTime: new Date(currentTime).toISOString(),
     });
 
-    // If we're on LearnLooper, reset the timer
+    // LearnLooperに戻ってきた場合
     if (isLearnLooper && !isDocumentHidden) {
       leaveTimeRef.current = null;
       lastActiveTimeRef.current = currentTime;
@@ -166,37 +107,40 @@ const DisplayLockProvider = ({ children }) => {
       return;
     }
 
-    // If this is the first time we're leaving LearnLooper
+    // SNSサイトを検知した場合は即座に警告
+    if (isSNS) {
+      const message = getRandomMessage('sns');
+      setWarningMessage(message);
+      setShowWarning(true);
+      showNotification(message);
+      return;
+    }
+
+    // 初めてLearnLooperを離れた場合
     if (!leaveTimeRef.current && (!isLearnLooper || isDocumentHidden)) {
       leaveTimeRef.current = currentTime;
       console.log('Started tracking leave time:', new Date(currentTime).toISOString());
       
-      // Show initial warning
-      const message = getRandomMessage(false);
+      const message = getRandomMessage('default');
       setWarningMessage(message);
       setShowWarning(true);
       return;
     }
 
-    // If we're already away from LearnLooper, check the duration
+    // 長時間離れている場合のチェック
     if (leaveTimeRef.current) {
       const timeDiff = currentTime - leaveTimeRef.current;
       const thresholdMs = warningThresholdRef.current * 60 * 1000;
 
-      console.log('Time check:', {
-        timeDiff: timeDiff / 1000,
-        threshold: thresholdMs / 1000,
-        exceededThreshold: timeDiff >= thresholdMs
-      });
-
       if (timeDiff >= thresholdMs) {
-        const message = getRandomMessage(true);
+        const message = getRandomMessage('longAbsence');
         setWarningMessage(message);
         setShowWarning(true);
         showNotification(message);
       }
     }
-  }, [getRandomMessage, showNotification]);
+  }, [getRandomMessage, showNotification, checkDomain]);
+
 
   // Set up activity monitoring
   useEffect(() => {
@@ -288,7 +232,5 @@ const DisplayLockProvider = ({ children }) => {
     </DisplayLockContext.Provider>
   );
 };
-  
-
 
 export default DisplayLockProvider;
