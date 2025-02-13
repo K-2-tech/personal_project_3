@@ -9,7 +9,7 @@ export default function Article3() {
     <>
       <Header />
       <div className={styles.navLink}>
-        <Link href="/">Home</Link> &gt;<Link href="/articles">Articles</Link> &gt; <Link href="/articles/article3">Science of Learning</Link>
+        <Link href="/">Home</Link> &gt;<Link href="/articles">Articles</Link> &gt; <Link href="/blog/article3">Science of Learning</Link>
       </div>
       <div className={styles.container}>
         <main className={styles.main}>
