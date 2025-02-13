@@ -13,11 +13,11 @@ export default function Article1() {
             <main className={styles.main}>
                 <h1>Link to Articles</h1>
                 <ul>
-                <li><Link href="/articles/article1">Time Management Techniques That Even Beginners Can Stick To - Achieved with LearnLooper!</Link>
-                </li><li><Link href="/articles/article2">LearnLooper: The Tool That's Revolutionizing Learning</Link>
-                </li><li><Link href="/articles/article3">Learning Efficiency Revolution: The Science-Backed Learning Method of LearnLooper</Link>
-                </li><li><Link href="/articles/article4">AB Loop Listening</Link>
-                </li><li><Link href="/articles/article5">Effective TOEIC Listening Practice Using LearnLooper</Link>
+                <li><Link href="/articles/article1">⚡ Why 1-Minute Study Sessions Are Game-Changing - The Science Behind LearnLooper's Timer 🎯</Link>
+                </li><li><Link href="/articles/article2">🚀 LearnLooper Guide 2025: Transform Your Study Experience ✨</Link>
+                </li><li><Link href="/articles/article3">🧠 The Science of Effective Learning: Research-Based Strategies That Actually Work ⚡</Link>
+                </li><li><Link href="/articles/article4">🎯 Master English Listening with AB Loop: Your Ultimate Guide to Perfect Practice 🔄</Link>
+                </li><li><Link href="/articles/article5">🎯 TOEIC Listening: Expert Strategies for Higher Scores in 2025 🚀</Link>
                 </li><li><Link href="/articles/article6">Boost Your Learning Efficiency with Scientific Techniques</Link>
                 </li><li><Link href="/articles/article7">How to Maximize Learning Efficiency with a Pomodoro Timer</Link>
                 </li><li><Link href="/articles/article8">Unlock Your Study Potential: LearnLooper’s Multi-Audio Upload for Efficient Learning</Link></li>

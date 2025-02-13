@@ -14,12 +14,12 @@ export default function Article2() {
       <div className={styles.container}>
         <main className={styles.main}>
           <h1 className={styles.title}>
-            🚀 LearnLooper Guide 2024: Transform Your Study Experience ✨
+            🚀 LearnLooper Guide 2025: Transform Your Study Experience ✨
           </h1>
 
           <section className={styles.section}>
             <p>
-              🤔 Can't find the right study tool? Struggling with complex learning apps? LearnLooper might be exactly what you need! In this comprehensive guide, we'll explore how this innovative learning tool is revolutionizing the way people study in 2024. 🌟
+              🤔 Can't find the right study tool? Struggling with complex learning apps? LearnLooper might be exactly what you need! In this comprehensive guide, we'll explore how this innovative learning tool is revolutionizing the way people study in 2025. 🌟
             </p>
           </section>
 

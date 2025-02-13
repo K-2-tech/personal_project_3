@@ -14,7 +14,7 @@ export default function Article5() {
       <div className={styles.container}>
         <main className={styles.main}>
           <h1 className={styles.title}>
-            🎯 TOEIC Listening: Expert Strategies for Higher Scores in 2024 🚀
+            🎯 TOEIC Listening: Expert Strategies for Higher Scores in 2025 🚀
           </h1>
 
           <section className={styles.section}>
