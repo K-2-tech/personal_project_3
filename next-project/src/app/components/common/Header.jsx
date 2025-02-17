@@ -4,7 +4,7 @@ import styles from "./Header.module.css";
 import Image from "next/image";
 import Link from "next/link";
 import { Lock, Unlock } from "lucide-react";
-import { useDisplayLock } from "../../contexts/DisplayLockProvider";
+import { useDisplayLock } from "./DisplayLockProvider";
 
 const Header = () => {
   const {
