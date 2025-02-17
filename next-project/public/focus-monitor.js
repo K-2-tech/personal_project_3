@@ -18,7 +18,7 @@ const SNS_DOMAINS = [
     constructor() {
       this.isEnabled = false;
       this.leaveTime = null;
-      this.warningThreshold = 10;
+      this.warningThreshold = 10; // 警告を発するまでの分数
       this.channel = new BroadcastChannel('learnlooper_focus');
       this.lastWarningTime = null;
       this.setupEventListeners();
@@ -29,6 +29,12 @@ const SNS_DOMAINS = [
       window.addEventListener('focus', () => this.handleFocus());
       window.addEventListener('blur', () => this.handleBlur());
       window.addEventListener('load', () => this.checkCurrentSite());
+      // visibilitychangeイベントでタブの再表示を検知
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          this.handleFocus();
+        }
+      });
       
       // 他のタブからのメッセージを受信
       this.channel.onmessage = (event) => this.handleChannelMessage(event);
@@ -36,11 +42,11 @@ const SNS_DOMAINS = [
   
     // フォーカスイベントの処理
     handleFocus() {
-        if (!this.isEnabled) return;
-        console.log('[FocusMonitor] Tab focused');
-        // フォーカスされたら離脱時刻をリセット
-        this.leaveTime = null;
-        this.checkCurrentSite();
+      if (!this.isEnabled) return;
+      console.log('[FocusMonitor] Tab focused');
+      // タブが再表示されたら離脱時刻をクリア
+      this.leaveTime = null;
+      this.checkCurrentSite();
     }
   
     // ブラーイベントの処理
@@ -52,32 +58,31 @@ const SNS_DOMAINS = [
   
     // 現在のサイトをチェック
     checkCurrentSite() {
-        if (!this.isEnabled) return;
-        
-        const currentDomain = window.location.hostname;
-        console.log('[FocusMonitor] Checking current site:', currentDomain);
+      if (!this.isEnabled) return;
+  
+      const currentDomain = window.location.hostname;
+      console.log('[FocusMonitor] Checking current site:', currentDomain);
+  
+      // 内部タブの場合は何もせずに離脱時刻をクリア
+      if (currentDomain.endsWith('learnlooper.app')) {
+        this.leaveTime = null;
+        return;
+      }
       
-        // 内部タブの場合は何もしない
-        if (currentDomain.endsWith('learnlooper.app')) {
-          // 内部タブの場合は leaveTime をクリアしておく
-          this.leaveTime = null;
-          return;
-        }
-        
-        // SNSサイトの検出
-        if (this.isSNSDomain(currentDomain)) {
-          this.broadcastWarning('sns', currentDomain);
-        } else if (this.leaveTime) {
-          const timeDiff = Date.now() - this.leaveTime;
-          if (timeDiff >= this.warningThreshold * 60 * 1000) {
-            this.broadcastWarning('longAbsence');
-          }
+      // SNSサイトの検出
+      if (this.isSNSDomain(currentDomain)) {
+        this.broadcastWarning('sns', currentDomain);
+      } else if (this.leaveTime) {
+        const timeDiff = Date.now() - this.leaveTime;
+        if (timeDiff >= this.warningThreshold * 60 * 1000) {
+          this.broadcastWarning('longAbsence');
         }
       }
+    }
   
     // SNSドメインかどうかをチェック
     isSNSDomain(domain) {
-      return SNS_DOMAINS.some(snsDomain => 
+      return SNS_DOMAINS.some(snsDomain =>
         domain === snsDomain || domain.endsWith('.' + snsDomain)
       );
     }
@@ -104,7 +109,6 @@ const SNS_DOMAINS = [
     // チャンネルメッセージの処理
     handleChannelMessage(event) {
       console.log('[FocusMonitor] Received channel message:', event.data);
-      // 必要に応じて追加の処理を実装
     }
   
     // 監視の有効化
@@ -127,3 +131,4 @@ const SNS_DOMAINS = [
   
   // グローバルインスタンスの作成
   window.focusMonitor = new FocusMonitor();
+  
