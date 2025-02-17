@@ -4,14 +4,17 @@ class FocusMonitor {
     constructor() {
       this.isEnabled = false;
       this.leaveTime = null;
-      this.warningThreshold = 1; // 1分の猶予時間
+      this.warningThreshold = 1; // 1分の猶予時間（分）
       this.channel = new BroadcastChannel('learnlooper_focus');
       this.lastWarningTime = null;
       this.setupEventListeners();
     }
   
     setupEventListeners() {
-      // visibilitychangeでタブの表示状態を監視
+      // ページ遷移イベント
+      window.addEventListener('pageshow', this.handleFocus.bind(this));
+      window.addEventListener('pagehide', this.handleBlur.bind(this));
+      // visibilitychange イベント
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
           this.handleFocus();
@@ -19,36 +22,31 @@ class FocusMonitor {
           this.handleBlur();
         }
       });
-      // 補助的にwindowのfocus/blurも監視
-      window.addEventListener('focus', () => this.handleFocus());
-      window.addEventListener('blur', () => this.handleBlur());
-      // ページロード時は離脱時間をリセット
-      window.addEventListener('load', () => {
-        this.leaveTime = null;
-      });
+      // 補助的に focus/blur イベント
+      window.addEventListener('focus', this.handleFocus.bind(this));
+      window.addEventListener('blur', this.handleBlur.bind(this));
       // ブロードキャストチャンネルからの受信
       this.channel.onmessage = (event) => this.handleChannelMessage(event);
     }
   
     handleFocus() {
       if (!this.isEnabled) return;
-      console.log('[FocusMonitor] Tab focused');
-      // タブに戻った瞬間、即座にSNS警告を送信
+      console.log('[FocusMonitor] Focus/pageshow triggered');
+      // タブがアクティブになった瞬間、即座にSNS警告を送信
       this.broadcastWarning('sns');
-      // 非アクティブ時間が１分以上ならlongAbsence警告を送信
+      // 非アクティブ状態が threshold を超えていた場合、longAbsence 警告を送信
       if (this.leaveTime) {
         const timeDiff = Date.now() - this.leaveTime;
         if (timeDiff >= this.warningThreshold * 60 * 1000) {
           this.broadcastWarning('longAbsence');
         }
       }
-      // 離脱時刻をリセット
       this.leaveTime = null;
     }
   
     handleBlur() {
       if (!this.isEnabled) return;
-      console.log('[FocusMonitor] Tab blurred');
+      console.log('[FocusMonitor] Blur/pagehide triggered');
       this.leaveTime = Date.now();
     }
   

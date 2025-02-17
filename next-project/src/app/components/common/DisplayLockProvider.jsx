@@ -18,20 +18,21 @@ const DisplayLockProvider = ({ children }) => {
   const [isEnabled, setIsEnabled] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState('');
-  const [warningType, setWarningType] = useState('sns'); // sns or longAbsence
-  const [warningThreshold] = useState(1); // 1分の猶予時間
+  const [warningType, setWarningType] = useState('sns'); // sns または longAbsence
+  const [warningThreshold, setWarningThreshold] = useState(1); // 1分の猶予時間
   const [notificationPermission, setNotificationPermission] = useState('default');
   const [isMounted, setIsMounted] = useState(false);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
 
-  // 警告メッセージの生成
+  // 警告メッセージの生成（sns と longAbsence のみ）
   const getRandomMessage = useCallback((messageType = 'sns') => {
     const messages = {
       sns: [
-        `🚫 ${domain} detected! Stay focused on your studies!`,
         "📚 Learning time, not scrolling time!",
         "🎯 Eyes on the prize - back to studying!",
-        "💪 Don't let social media break your concentration!"
+        "💪 Don't let social media break your concentration!",
+        "👀 Don't go on social media!",
+        "💛 Try to resist checking social media!"
       ],
       longAbsence: [
         "⏰ Time to get back to your studies!",
@@ -68,12 +69,27 @@ const DisplayLockProvider = ({ children }) => {
     }
   }, []);
 
+  // updateSettings 関数（warningThreshold の更新）
+  const updateSettings = useCallback((newThreshold) => {
+    setWarningThreshold(newThreshold);
+    // focus-monitor.js 側にも反映（グローバルインスタンスの場合）
+    if (window.focusMonitor) {
+      window.focusMonitor.warningThreshold = newThreshold;
+    }
+    try {
+      localStorage.setItem('displayLockSettings', JSON.stringify({
+        isEnabled,
+        warningThreshold: newThreshold
+      }));
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+    }
+  }, [isEnabled]);
+
   // BroadcastChannelからのメッセージを処理
   useEffect(() => {
     if (!isEnabled || !isScriptLoaded) return;
-
     const channel = new BroadcastChannel('learnlooper_focus');
-
     const handleMessage = (event) => {
       if (event.data.type === 'FOCUS_WARNING') {
         const message = getRandomMessage(event.data.warningType);
@@ -83,9 +99,7 @@ const DisplayLockProvider = ({ children }) => {
         showNotification(message);
       }
     };
-
     channel.addEventListener('message', handleMessage);
-
     return () => {
       channel.removeEventListener('message', handleMessage);
       channel.close();
@@ -98,8 +112,12 @@ const DisplayLockProvider = ({ children }) => {
     try {
       const savedSettings = localStorage.getItem('displayLockSettings');
       if (savedSettings) {
-        const { isEnabled: savedIsEnabled } = JSON.parse(savedSettings);
+        const { isEnabled: savedIsEnabled, warningThreshold: savedThreshold } = JSON.parse(savedSettings);
         setIsEnabled(savedIsEnabled);
+        setWarningThreshold(savedThreshold);
+        if (window.focusMonitor) {
+          window.focusMonitor.warningThreshold = savedThreshold;
+        }
       }
       if ('Notification' in window) {
         setNotificationPermission(Notification.permission);
@@ -110,18 +128,17 @@ const DisplayLockProvider = ({ children }) => {
     return () => setIsMounted(false);
   }, []);
 
-  // FocusMonitorの状態を更新
+  // FocusMonitor の状態を更新
   useEffect(() => {
     if (!isScriptLoaded || !window.focusMonitor) return;
     if (isEnabled) {
       window.focusMonitor.enable();
-      // ここでwarningThresholdの更新も反映できる場合は、focus-monitor.js側に反映する処理を追加してください
     } else {
       window.focusMonitor.disable();
     }
   }, [isEnabled, isScriptLoaded]);
 
-  // DisplayLockの切り替え
+  // DisplayLock の切り替え
   const toggleDisplayLock = useCallback(async () => {
     if (!isMounted) return;
     const newState = !isEnabled;
@@ -145,6 +162,8 @@ const DisplayLockProvider = ({ children }) => {
     <DisplayLockContext.Provider value={{
       isEnabled,
       toggleDisplayLock,
+      warningThreshold,
+      updateSettings,
       notificationPermission,
       requestNotificationPermission
     }}>
