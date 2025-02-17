@@ -172,20 +172,7 @@ const DisplayLockProvider = ({ children }) => {
         onLoad={() => setIsScriptLoaded(true)}
       />
       {children}
-      {showWarning && (
-        <div className={`${styles.warningContainer} ${styles[warningType]}`}>
-          <div className={styles.warningContent}>
-            <p className={styles.warningMessage}>{warningMessage}</p>
-            <button
-              onClick={() => setShowWarning(false)}
-              className={styles.closeButton}
-              aria-label="Close warning"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
+      
     </DisplayLockContext.Provider>
   );
 };
