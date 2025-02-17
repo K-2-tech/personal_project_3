@@ -18,14 +18,14 @@ const DisplayLockProvider = ({ children }) => {
   const [isEnabled, setIsEnabled] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState('');
-  const [warningType, setWarningType] = useState('default');
-  const [warningThreshold] = useState(10);
+  const [warningType, setWarningType] = useState('sns'); // sns or longAbsence
+  const [warningThreshold] = useState(1); // 1分の猶予時間
   const [notificationPermission, setNotificationPermission] = useState('default');
   const [isMounted, setIsMounted] = useState(false);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
 
-  // 警告メッセージの生成（snsとlongAbsence用）
-  const getRandomMessage = useCallback((messageType = 'default') => {
+  // 警告メッセージの生成
+  const getRandomMessage = useCallback((messageType = 'sns') => {
     const messages = {
       sns: [
         `🚫 ${domain} detected! Stay focused on your studies!`,
@@ -39,15 +39,8 @@ const DisplayLockProvider = ({ children }) => {
         "🔄 Let's resume where you left off!",
         "⚡ Reactivate your focus mode!"
       ],
-      default: [
-        "👀 Keep your focus!",
-        "📝 Stay on track!",
-        "🎯 Eyes on the goal!",
-        "💡 Back to learning!"
-      ]
     };
-
-    const list = messages[messageType] || messages.default;
+    const list = messages[messageType] || messages.sns;
     return list[Math.floor(Math.random() * list.length)];
   }, []);
 
@@ -122,6 +115,7 @@ const DisplayLockProvider = ({ children }) => {
     if (!isScriptLoaded || !window.focusMonitor) return;
     if (isEnabled) {
       window.focusMonitor.enable();
+      // ここでwarningThresholdの更新も反映できる場合は、focus-monitor.js側に反映する処理を追加してください
     } else {
       window.focusMonitor.disable();
     }

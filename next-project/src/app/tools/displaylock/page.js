@@ -2,8 +2,9 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import styles from './DisplayLockPage.module.css';
-import Header from "../../components/common/Header"
-import Footer from "../../components/common/Footer"
+import Header from "../../components/common/Header";
+import Footer from "../../components/common/Footer";
+
 // クライアントサイドでのみ読み込むコンポーネント
 const DisplayLock = dynamic(
   () => import('../../components/displaylock/DisplayLock'),
@@ -86,8 +87,7 @@ const DisplayLockWrapper = dynamic(
             </label>
             <DisplayLock />
             <p className={styles.hint}>
-              Toggle Display Lock functionality on or off. When enabled, it will 
-              monitor your browsing activity and help you stay focused.
+              Toggle the Display Lock feature on or off. When enabled, it monitors your activity on LearnLooper and sends notifications if you become inactive.
             </p>
           </div>
 
@@ -108,14 +108,13 @@ const DisplayLockWrapper = dynamic(
               />
               <span> minutes</span>
               {showSaved && (
-                <span className={styles.statusIndicator + ' ' + styles.enabled}>
+                <span className={`${styles.statusIndicator} ${styles.enabled}`}>
                   Saved
                 </span>
               )}
             </form>
             <p className={styles.hint}>
-              Set how long you can spend on external sites before receiving a 
-              warning notification (1-120 minutes).
+              Set the duration (in minutes) of inactivity on LearnLooper before a warning is issued. The default is 1 minute.
             </p>
           </div>
 
@@ -144,12 +143,12 @@ const DisplayLockWrapper = dynamic(
               About Display Lock
             </label>
             <p className={styles.hint}>
-              Display Lock is designed to enhance your study sessions by:
+              Display Lock enhances your study sessions by:
             </p>
             <ul className={styles.featureList}>
-              <li>Monitoring tab switches and website navigation</li>
-              <li>Sending timely reminders when you're off-track</li>
-              <li>Allowing free movement within LearnLooper</li>
+              <li>Monitoring tab switches within LearnLooper</li>
+              <li>Sending immediate reminders when you switch tabs</li>
+              <li>Issuing a warning if you remain inactive for longer than the set threshold</li>
               <li>Providing customizable warning thresholds</li>
             </ul>
           </div>
@@ -165,17 +164,16 @@ export default function DisplayLockPage() {
   return (
     <>
       <Header />
-    <div className={styles.container}>
-      <h1 className={styles.title}>Display Lock Settings</h1>
-      <p className={styles.description}>
-        Display Lock helps maintain your focus by monitoring tab switches and 
-        detecting prolonged absences from your study session. It allows free 
-        navigation within LearnLooper while sending notifications when you spend 
-        too much time on external websites.
-      </p>
-      <DisplayLockWrapper />
+      <div className={styles.container}>
+        <h1 className={styles.title}>Display Lock Settings</h1>
+        <p className={styles.description}>
+          Display Lock helps you stay focused by monitoring your activity on LearnLooper. 
+          It sends an immediate warning when you switch tabs and another notification 
+          if you remain inactive for a set period.
+        </p>
+        <DisplayLockWrapper />
       </div>
       <Footer />
-      </>
+    </>
   );
 }
