@@ -21,50 +21,16 @@ const DisplayLockProvider = ({ children }) => {
   const [warningThreshold] = useState(10);
   const [notificationPermission, setNotificationPermission] = useState('default');
   const [isMounted, setIsMounted] = useState(false);
-  const [serviceWorkerRegistration, setServiceWorkerRegistration] = useState(null);
+
+  const leaveTimeRef = useRef(null);
+  const warningTimeoutRef = useRef(null);
+  const isVisibleRef = useRef(true);
+  const isEnabledRef = useRef(isEnabled);
 
   // デバッグ用のログ関数
   const log = useCallback((message, data = {}) => {
     console.log(`[DisplayLock] ${message}`, data);
   }, []);
-
-  // Service Workerの登録
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      log('Registering Service Worker');
-      navigator.serviceWorker
-        .register('/display-lock-sw.js', { scope: '/' }) //ファイルパスはデフォルトでpublic直下
-        .then(registration => {
-          log('Service Worker registered successfully', { registration });
-          setServiceWorkerRegistration(registration);
-          
-          // Service Worker がアクティブになるのを待つ
-          if (registration.active) {
-            initializeServiceWorker(registration.active);
-          } else {
-            registration.addEventListener('activate', () => {
-              log('Service Worker activated');
-              initializeServiceWorker(registration.active);
-            });
-          }
-        })
-        .catch(error => {
-          console.error('Service Worker registration failed:', error);
-        });
-    }
-  }, []);
-
-  // Service Workerの初期化
-  const initializeServiceWorker = useCallback((serviceWorker) => {
-    log('Initializing Service Worker', { isEnabled, warningThreshold });
-    serviceWorker.postMessage({
-      type: 'INITIALIZE',
-      data: {
-        isEnabled,
-        warningThreshold
-      }
-    });
-  }, [isEnabled, warningThreshold]);
 
   // 警告メッセージの生成
   const getRandomMessage = useCallback((messageType = 'default', snsUrl = '') => {
@@ -104,29 +70,14 @@ const DisplayLockProvider = ({ children }) => {
     }
   }, []);
 
-  // Service Workerからのメッセージを処理
-  useEffect(() => {
-    if (!navigator.serviceWorker) return;
-
-    const handleMessage = (event) => {
-      log('Received message from Service Worker', event.data);
-      
-      if (event.data.type === 'DISPLAY_LOCK_WARNING') {
-        const { warningType, snsUrl } = event.data;
-        const message = getRandomMessage(warningType, snsUrl);
-        setWarningMessage(message);
-        setWarningType(warningType);
-        setShowWarning(true);
-        showNotification(message);
-      }
-    };
-
-    navigator.serviceWorker.addEventListener('message', handleMessage);
-    
-    return () => {
-      navigator.serviceWorker.removeEventListener('message', handleMessage);
-    };
-  }, [getRandomMessage, showNotification, log]);
+  // 警告を表示する関数
+  const showWarningMessage = useCallback((type, snsUrl = '') => {
+    const message = getRandomMessage(type, snsUrl);
+    setWarningMessage(message);
+    setWarningType(type);
+    setShowWarning(true);
+    showNotification(message);
+  }, [getRandomMessage, showNotification]);
 
   // 通知の許可を要求する関数
   const requestNotificationPermission = useCallback(async () => {
@@ -142,6 +93,99 @@ const DisplayLockProvider = ({ children }) => {
       return 'denied';
     }
   }, [log]);
+
+  // タブの可視性変更を監視
+  useEffect(() => {
+    if (!isEnabled) return;
+
+    const handleVisibilityChange = () => {
+      const isVisible = !document.hidden;
+      log('Visibility changed', { isVisible });
+      isVisibleRef.current = isVisible;
+
+      if (isVisible) {
+        // LearnLooperに戻ってきた場合
+        leaveTimeRef.current = null;
+        if (warningTimeoutRef.current) {
+          clearTimeout(warningTimeoutRef.current);
+          warningTimeoutRef.current = null;
+        }
+        setShowWarning(false);
+      } else {
+        // LearnLooperを離れた場合
+        leaveTimeRef.current = Date.now();
+        // longAbsence警告のタイマーをセット
+        warningTimeoutRef.current = setTimeout(() => {
+          if (isEnabledRef.current && !isVisibleRef.current) {
+            showWarningMessage('longAbsence');
+          }
+        }, warningThreshold * 60 * 1000);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (warningTimeoutRef.current) {
+        clearTimeout(warningTimeoutRef.current);
+      }
+    };
+  }, [isEnabled, warningThreshold, showWarningMessage, log]);
+
+  // BroadcastChannelを使用してSNS検出を共有
+  useEffect(() => {
+    if (!isEnabled) return;
+
+    const channel = new BroadcastChannel('learnlooper_focus');
+    
+    // SNSドメインのリスト
+    const SNS_DOMAINS = [
+      'twitter.com',
+      'x.com',
+      'facebook.com',
+      'instagram.com',
+      'tiktok.com',
+      'linkedin.com',
+      'youtube.com',
+      'line.me',
+      'pinterest.com',
+      'reddit.com'
+    ];
+
+    // 現在のドメインがSNSかチェック
+    const checkCurrentDomain = () => {
+      const currentDomain = window.location.hostname;
+      if (SNS_DOMAINS.some(domain => 
+        currentDomain === domain || currentDomain.endsWith('.' + domain)
+      )) {
+        channel.postMessage({ type: 'SNS_DETECTED', domain: currentDomain });
+      }
+    };
+
+    // メッセージを受信したときの処理
+    const handleMessage = (event) => {
+      if (event.data.type === 'SNS_DETECTED' && !isVisibleRef.current) {
+        showWarningMessage('sns', event.data.domain);
+      }
+    };
+
+    channel.addEventListener('message', handleMessage);
+    
+    // 定期的にドメインをチェック
+    const checkInterval = setInterval(checkCurrentDomain, 5000);
+
+    return () => {
+      channel.removeEventListener('message', handleMessage);
+      channel.close();
+      clearInterval(checkInterval);
+    };
+  }, [isEnabled, showWarningMessage]);
+
+  // isEnabledの参照を更新
+  useEffect(() => {
+    isEnabledRef.current = isEnabled;
+  }, [isEnabled]);
 
   // 設定の読み込み
   useEffect(() => {
@@ -179,17 +223,7 @@ const DisplayLockProvider = ({ children }) => {
 
     setIsEnabled(newState);
     setShowWarning(false);
-
-    // Service Workerに状態を通知
-    if (serviceWorkerRegistration?.active) {
-      log('Sending state update to Service Worker', { newState });
-      serviceWorkerRegistration.active.postMessage({
-        type: 'UPDATE_STATE',
-        data: { isEnabled: newState }
-      });
-    } else {
-      log('Service Worker not ready for state update');
-    }
+    leaveTimeRef.current = null;
 
     try {
       localStorage.setItem('displayLockSettings', JSON.stringify({
@@ -199,7 +233,7 @@ const DisplayLockProvider = ({ children }) => {
     } catch (error) {
       console.error('Failed to save settings:', error);
     }
-  }, [isMounted, isEnabled, notificationPermission, warningThreshold, requestNotificationPermission, serviceWorkerRegistration, log]);
+  }, [isMounted, isEnabled, notificationPermission, warningThreshold, requestNotificationPermission, log]);
 
   return (
     <DisplayLockContext.Provider value={{
