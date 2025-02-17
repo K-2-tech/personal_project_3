@@ -24,8 +24,8 @@ const DisplayLockProvider = ({ children }) => {
   const [isMounted, setIsMounted] = useState(false);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
 
-  // 警告メッセージの生成
-  const getRandomMessage = useCallback((messageType = 'default', domain = '') => {
+  // 警告メッセージの生成（snsとlongAbsence用）
+  const getRandomMessage = useCallback((messageType = 'default') => {
     const messages = {
       sns: [
         `🚫 ${domain} detected! Stay focused on your studies!`,
@@ -47,13 +47,13 @@ const DisplayLockProvider = ({ children }) => {
       ]
     };
 
-    return messages[messageType][Math.floor(Math.random() * messages[messageType].length)];
+    const list = messages[messageType] || messages.default;
+    return list[Math.floor(Math.random() * list.length)];
   }, []);
 
   // 通知を送る関数
   const showNotification = useCallback((message) => {
     if (!('Notification' in window)) return;
-
     if (Notification.permission === 'granted') {
       new Notification('LearnLooper Focus Alert', {
         body: message,
@@ -65,7 +65,6 @@ const DisplayLockProvider = ({ children }) => {
   // 通知の許可を要求する関数
   const requestNotificationPermission = useCallback(async () => {
     if (!('Notification' in window)) return 'denied';
-
     try {
       const permission = await Notification.requestPermission();
       setNotificationPermission(permission);
@@ -81,10 +80,10 @@ const DisplayLockProvider = ({ children }) => {
     if (!isEnabled || !isScriptLoaded) return;
 
     const channel = new BroadcastChannel('learnlooper_focus');
-    
+
     const handleMessage = (event) => {
       if (event.data.type === 'FOCUS_WARNING') {
-        const message = getRandomMessage(event.data.warningType, event.data.domain);
+        const message = getRandomMessage(event.data.warningType);
         setWarningMessage(message);
         setWarningType(event.data.warningType);
         setShowWarning(true);
@@ -93,7 +92,7 @@ const DisplayLockProvider = ({ children }) => {
     };
 
     channel.addEventListener('message', handleMessage);
-    
+
     return () => {
       channel.removeEventListener('message', handleMessage);
       channel.close();
@@ -103,28 +102,24 @@ const DisplayLockProvider = ({ children }) => {
   // 設定の読み込み
   useEffect(() => {
     setIsMounted(true);
-    
     try {
       const savedSettings = localStorage.getItem('displayLockSettings');
       if (savedSettings) {
         const { isEnabled: savedIsEnabled } = JSON.parse(savedSettings);
         setIsEnabled(savedIsEnabled);
       }
-
       if ('Notification' in window) {
         setNotificationPermission(Notification.permission);
       }
     } catch (error) {
       console.error('Failed to load settings:', error);
     }
-
     return () => setIsMounted(false);
   }, []);
 
   // FocusMonitorの状態を更新
   useEffect(() => {
     if (!isScriptLoaded || !window.focusMonitor) return;
-    
     if (isEnabled) {
       window.focusMonitor.enable();
     } else {
@@ -135,17 +130,13 @@ const DisplayLockProvider = ({ children }) => {
   // DisplayLockの切り替え
   const toggleDisplayLock = useCallback(async () => {
     if (!isMounted) return;
-
     const newState = !isEnabled;
-
     if (newState && notificationPermission === 'default') {
       const permission = await requestNotificationPermission();
       setNotificationPermission(permission);
     }
-
     setIsEnabled(newState);
     setShowWarning(false);
-
     try {
       localStorage.setItem('displayLockSettings', JSON.stringify({
         isEnabled: newState,
