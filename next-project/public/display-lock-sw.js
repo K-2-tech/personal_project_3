@@ -1,3 +1,4 @@
+// public/display-lock-sw.js
 const CHECK_INTERVAL = 5000;
 const ALLOWED_DOMAIN = 'learnlooper.app';
 
@@ -77,7 +78,10 @@ async function sendWarning(type, snsUrl = '') {
   if (!canSendWarning()) return;
   
   lastWarningTime = Date.now();
-  const clients = await self.clients.matchAll();
+  const clients = await self.clients.matchAll({
+    type: 'window',
+    includeUncontrolled: true
+  });
   const message = {
     type: 'DISPLAY_LOCK_WARNING',
     warningType: type,
@@ -96,7 +100,10 @@ async function checkTabState() {
   }
 
   try {
-    const clients = await self.clients.matchAll();
+    const clients = await self.clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true
+    });
     const currentTime = Date.now();
     
     // アクティブなタブを探す
@@ -109,7 +116,10 @@ async function checkTabState() {
     }
 
     if (!activeClient) {
-      log('No active tab found');
+      log('No active tab found', { 
+        totalClients: clients.length,
+        clientUrls: clients.map(c => ({ url: c.url, focused: c.focused }))
+      });
       return;
     }
 
