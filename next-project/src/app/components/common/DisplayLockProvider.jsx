@@ -23,28 +23,48 @@ const DisplayLockProvider = ({ children }) => {
   const [isMounted, setIsMounted] = useState(false);
   const [serviceWorkerRegistration, setServiceWorkerRegistration] = useState(null);
 
+  // デバッグ用のログ関数
+  const log = useCallback((message, data = {}) => {
+    console.log(`[DisplayLock] ${message}`, data);
+  }, []);
+
   // Service Workerの登録
   useEffect(() => {
     if ('serviceWorker' in navigator) {
+      log('Registering Service Worker');
       navigator.serviceWorker
-        .register('../../../../public/display-lock-sw.js')
+        .register('../../../../public/display-lock-sw.js', { scope: '/' })
         .then(registration => {
+          log('Service Worker registered successfully', { registration });
           setServiceWorkerRegistration(registration);
           
-          // Service Workerの初期状態を設定
-          registration.active?.postMessage({
-            type: 'INITIALIZE',
-            data: {
-              isEnabled,
-              warningThreshold
-            }
-          });
+          // Service Worker がアクティブになるのを待つ
+          if (registration.active) {
+            initializeServiceWorker(registration.active);
+          } else {
+            registration.addEventListener('activate', () => {
+              log('Service Worker activated');
+              initializeServiceWorker(registration.active);
+            });
+          }
         })
         .catch(error => {
           console.error('Service Worker registration failed:', error);
         });
     }
   }, []);
+
+  // Service Workerの初期化
+  const initializeServiceWorker = useCallback((serviceWorker) => {
+    log('Initializing Service Worker', { isEnabled, warningThreshold });
+    serviceWorker.postMessage({
+      type: 'INITIALIZE',
+      data: {
+        isEnabled,
+        warningThreshold
+      }
+    });
+  }, [isEnabled, warningThreshold]);
 
   // 警告メッセージの生成
   const getRandomMessage = useCallback((messageType = 'default', snsUrl = '') => {
@@ -89,6 +109,8 @@ const DisplayLockProvider = ({ children }) => {
     if (!navigator.serviceWorker) return;
 
     const handleMessage = (event) => {
+      log('Received message from Service Worker', event.data);
+      
       if (event.data.type === 'DISPLAY_LOCK_WARNING') {
         const { warningType, snsUrl } = event.data;
         const message = getRandomMessage(warningType, snsUrl);
@@ -100,10 +122,11 @@ const DisplayLockProvider = ({ children }) => {
     };
 
     navigator.serviceWorker.addEventListener('message', handleMessage);
+    
     return () => {
       navigator.serviceWorker.removeEventListener('message', handleMessage);
     };
-  }, [getRandomMessage, showNotification]);
+  }, [getRandomMessage, showNotification, log]);
 
   // 通知の許可を要求する関数
   const requestNotificationPermission = useCallback(async () => {
@@ -111,13 +134,14 @@ const DisplayLockProvider = ({ children }) => {
 
     try {
       const permission = await Notification.requestPermission();
+      log('Notification permission result', { permission });
       setNotificationPermission(permission);
       return permission;
     } catch (error) {
       console.error('Failed to request notification permission:', error);
       return 'denied';
     }
-  }, []);
+  }, [log]);
 
   // 設定の読み込み
   useEffect(() => {
@@ -127,6 +151,7 @@ const DisplayLockProvider = ({ children }) => {
       const savedSettings = localStorage.getItem('displayLockSettings');
       if (savedSettings) {
         const { isEnabled: savedIsEnabled } = JSON.parse(savedSettings);
+        log('Loaded saved settings', { savedIsEnabled });
         setIsEnabled(savedIsEnabled);
       }
 
@@ -138,13 +163,14 @@ const DisplayLockProvider = ({ children }) => {
     }
 
     return () => setIsMounted(false);
-  }, []);
+  }, [log]);
 
   // DisplayLockの切り替え
   const toggleDisplayLock = useCallback(async () => {
     if (!isMounted) return;
 
     const newState = !isEnabled;
+    log('Toggling DisplayLock', { newState });
 
     if (newState && notificationPermission === 'default') {
       const permission = await requestNotificationPermission();
@@ -156,10 +182,13 @@ const DisplayLockProvider = ({ children }) => {
 
     // Service Workerに状態を通知
     if (serviceWorkerRegistration?.active) {
+      log('Sending state update to Service Worker', { newState });
       serviceWorkerRegistration.active.postMessage({
         type: 'UPDATE_STATE',
         data: { isEnabled: newState }
       });
+    } else {
+      log('Service Worker not ready for state update');
     }
 
     try {
@@ -170,7 +199,7 @@ const DisplayLockProvider = ({ children }) => {
     } catch (error) {
       console.error('Failed to save settings:', error);
     }
-  }, [isMounted, isEnabled, notificationPermission, warningThreshold, requestNotificationPermission, serviceWorkerRegistration]);
+  }, [isMounted, isEnabled, notificationPermission, warningThreshold, requestNotificationPermission, serviceWorkerRegistration, log]);
 
   return (
     <DisplayLockContext.Provider value={{

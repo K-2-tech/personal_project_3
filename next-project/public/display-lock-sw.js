@@ -19,24 +19,33 @@ let isEnabled = false;
 let leaveTime = null;
 let warningThreshold = 10;
 
+// デバッグ用のログ関数
+const log = (message, data = {}) => {
+  console.log(`[SW] ${message}`, data);
+};
+
 // Service Workerのインストール
 self.addEventListener('install', (event) => {
+  log('Service Worker installed');
   self.skipWaiting();
 });
 
 // Service Workerのアクティベート
 self.addEventListener('activate', (event) => {
+  log('Service Worker activated');
   event.waitUntil(clients.claim());
 });
 
 // メインスレッドからのメッセージを受け取る
 self.addEventListener('message', (event) => {
   const { type, data } = event.data;
+  log('Received message', { type, data });
   
   switch (type) {
     case 'INITIALIZE':
       isEnabled = data.isEnabled;
       warningThreshold = data.warningThreshold;
+      log('Initialized with', { isEnabled, warningThreshold });
       break;
       
     case 'UPDATE_STATE':
@@ -44,17 +53,27 @@ self.addEventListener('message', (event) => {
       if (!isEnabled) {
         leaveTime = null;
       }
+      log('State updated', { isEnabled });
       break;
   }
 });
 
+// ドメインチェック関数
+function checkDomain(hostname) {
+  return SNS_DOMAINS.some(domain => 
+    hostname === domain || hostname.endsWith('.' + domain)
+  );
+}
+
 // タブの状態をチェックする関数
 async function checkTabState() {
-  if (!isEnabled) return;
+  if (!isEnabled) {
+    log('DisplayLock is disabled, skipping check');
+    return;
+  }
 
-  const clients = await self.clients.matchAll({
-    type: 'window'
-  });
+  const clients = await self.clients.matchAll();
+  log('Found clients', { count: clients.length });
 
   const currentTime = Date.now();
   let isLearnLooperActive = false;
@@ -63,31 +82,35 @@ async function checkTabState() {
 
   for (const client of clients) {
     const url = new URL(client.url);
+    log('Checking client', { url: url.hostname, focused: client.focused });
     
-    // LearnLooperのタブがアクティブかチェック
-    if (url.hostname === ALLOWED_DOMAIN && client.focused) {
-      isLearnLooperActive = true;
-      leaveTime = null;
-    }
-    
-    // SNSタブの検出
-    if (SNS_DOMAINS.some(domain => url.hostname === domain || url.hostname.endsWith('.' + domain))) {
+    if (url.hostname === ALLOWED_DOMAIN) {
+      if (client.focused) {
+        isLearnLooperActive = true;
+        leaveTime = null;
+        log('LearnLooper tab is active');
+      }
+    } else if (checkDomain(url.hostname)) {
       hasSNSTab = true;
       snsUrl = url.hostname;
+      log('SNS tab detected', { snsUrl });
     }
   }
 
   // 警告メッセージの送信判定
   if (isEnabled) {
     if (hasSNSTab) {
+      log('Sending SNS warning', { snsUrl });
       notifyClients('sns', snsUrl);
     } else if (!isLearnLooperActive) {
       if (!leaveTime) {
         leaveTime = currentTime;
+        log('First time leaving LearnLooper');
         notifyClients('default');
       } else {
         const timeDiff = currentTime - leaveTime;
         if (timeDiff >= warningThreshold * 60 * 1000) {
+          log('Long absence detected', { timeDiff });
           notifyClients('longAbsence');
         }
       }
@@ -103,6 +126,8 @@ async function notifyClients(warningType, snsUrl = '') {
     warningType,
     snsUrl
   };
+  
+  log('Sending notification to clients', { message, clientCount: clients.length });
   
   clients.forEach(client => {
     client.postMessage(message);
