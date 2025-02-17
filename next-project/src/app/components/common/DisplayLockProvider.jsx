@@ -33,7 +33,7 @@ const DisplayLockProvider = ({ children }) => {
     if ('serviceWorker' in navigator) {
       log('Registering Service Worker');
       navigator.serviceWorker
-        .register('../../../../public/display-lock-sw.js', { scope: '/' })
+        .register('/display-lock-sw.js', { scope: '/' }) //ファイルパスはデフォルトでpublic直下
         .then(registration => {
           log('Service Worker registered successfully', { registration });
           setServiceWorkerRegistration(registration);
