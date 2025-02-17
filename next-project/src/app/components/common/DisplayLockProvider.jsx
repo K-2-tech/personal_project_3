@@ -14,77 +14,43 @@ export const useDisplayLock = () => {
 };
 
 const DisplayLockProvider = ({ children }) => {
-  // 既存のステート管理
   const [isEnabled, setIsEnabled] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState('');
-  const [warningType, setWarningType] = useState('default'); // 新しく追加: 警告タイプの管理
+  const [warningType, setWarningType] = useState('default');
   const [warningThreshold] = useState(10);
   const [notificationPermission, setNotificationPermission] = useState('default');
   const [isMounted, setIsMounted] = useState(false);
+  const [serviceWorkerRegistration, setServiceWorkerRegistration] = useState(null);
 
-  // Refs
-  const isEnabledRef = useRef(isEnabled);
-  const warningThresholdRef = useRef(warningThreshold);
-  const leaveTimeRef = useRef(null);
-  const lastActiveTimeRef = useRef(Date.now());
-  const focusIntervalRef = useRef(null);
-
-  const ALLOWED_DOMAIN = 'learnlooper.app';
-  const CHECK_INTERVAL = 5000;
-
-  // SNSドメインのリスト
-  const SNS_DOMAINS = [
-    'twitter.com',
-    'x.com',
-    'facebook.com',
-    'instagram.com',
-    'tiktok.com',
-    'linkedin.com',
-    'youtube.com',
-    'line.me',
-    'pinterest.com',
-    'reddit.com'
-  ];
-
-  // 通知を送る関数
-  const showNotification = useCallback((message) => {
-    if (!('Notification' in window)) return;
-
-    if (Notification.permission === 'granted') {
-      new Notification('LearnLooper Focus Alert', {
-        body: message,
-        icon: '/favicon.ico'
-      });
+  // Service Workerの登録
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('../../../../public/display-lock-sw.js')
+        .then(registration => {
+          setServiceWorkerRegistration(registration);
+          
+          // Service Workerの初期状態を設定
+          registration.active?.postMessage({
+            type: 'INITIALIZE',
+            data: {
+              isEnabled,
+              warningThreshold
+            }
+          });
+        })
+        .catch(error => {
+          console.error('Service Worker registration failed:', error);
+        });
     }
-  }, []);
-
-  // 通知の許可を要求する関数
-  const requestNotificationPermission = useCallback(async () => {
-    if (!('Notification' in window)) return 'denied';
-
-    try {
-      const permission = await Notification.requestPermission();
-      setNotificationPermission(permission);
-      return permission;
-    } catch (error) {
-      console.error('Failed to request notification permission:', error);
-      return 'denied';
-    }
-  }, []);
-
-  // ドメインチェック関数
-  const checkDomain = useCallback((hostname) => {
-    return SNS_DOMAINS.some(domain => 
-      hostname === domain || hostname.endsWith('.' + domain)
-    );
   }, []);
 
   // 警告メッセージの生成
-  const getRandomMessage = useCallback((messageType = 'default') => {
+  const getRandomMessage = useCallback((messageType = 'default', snsUrl = '') => {
     const messages = {
       sns: [
-        "🚫 Social media detected! Stay focused on your studies!",
+        `🚫 ${snsUrl} detected! Stay focused on your studies!`,
         "📚 Learning time, not scrolling time!",
         "🎯 Eyes on the prize - back to studying!",
         "💪 Don't let social media break your concentration!"
@@ -106,72 +72,57 @@ const DisplayLockProvider = ({ children }) => {
     return messages[messageType][Math.floor(Math.random() * messages[messageType].length)];
   }, []);
 
-  // フォーカスチェック関数
-  const checkFocusAndActivity = useCallback(() => {
-    if (!isEnabledRef.current) return;
+  // 通知を送る関数
+  const showNotification = useCallback((message) => {
+    if (!('Notification' in window)) return;
 
-    const currentTime = Date.now();
-    const currentHostname = window.location.hostname;
-    const isLearnLooper = currentHostname === ALLOWED_DOMAIN;
-    const isDocumentHidden = document.hidden;
-    const isSNS = checkDomain(currentHostname);
-
-    // LearnLooperに戻ってきた場合
-    if (isLearnLooper && !isDocumentHidden) {
-      leaveTimeRef.current = null;
-      lastActiveTimeRef.current = currentTime;
-      setShowWarning(false);
-      return;
+    if (Notification.permission === 'granted') {
+      new Notification('LearnLooper Focus Alert', {
+        body: message,
+        icon: '/favicon.ico'
+      });
     }
+  }, []);
 
-    // SNSサイトを検知した場合
-    if (isSNS) {
-      const message = getRandomMessage('sns');
-      setWarningMessage(message);
-      setWarningType('sns');
-      setShowWarning(true);
-      showNotification(message);
-      return;
-    }
+  // Service Workerからのメッセージを処理
+  useEffect(() => {
+    if (!navigator.serviceWorker) return;
 
-    // 初めてLearnLooperを離れた場合
-    if (!leaveTimeRef.current && (!isLearnLooper || isDocumentHidden)) {
-      leaveTimeRef.current = currentTime;
-      const message = getRandomMessage('default');
-      setWarningMessage(message);
-      setWarningType('default');
-      setShowWarning(true);
-      return;
-    }
-
-    // 長時間離れている場合
-    if (leaveTimeRef.current) {
-      const timeDiff = currentTime - leaveTimeRef.current;
-      const thresholdMs = warningThresholdRef.current * 60 * 1000;
-
-      if (timeDiff >= thresholdMs) {
-        const message = getRandomMessage('longAbsence');
+    const handleMessage = (event) => {
+      if (event.data.type === 'DISPLAY_LOCK_WARNING') {
+        const { warningType, snsUrl } = event.data;
+        const message = getRandomMessage(warningType, snsUrl);
         setWarningMessage(message);
-        setWarningType('longAbsence');
+        setWarningType(warningType);
         setShowWarning(true);
         showNotification(message);
       }
+    };
+
+    navigator.serviceWorker.addEventListener('message', handleMessage);
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', handleMessage);
+    };
+  }, [getRandomMessage, showNotification]);
+
+  // 通知の許可を要求する関数
+  const requestNotificationPermission = useCallback(async () => {
+    if (!('Notification' in window)) return 'denied';
+
+    try {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      return permission;
+    } catch (error) {
+      console.error('Failed to request notification permission:', error);
+      return 'denied';
     }
-  }, [getRandomMessage, showNotification, checkDomain]);
-
-  // Effect hooks
-  useEffect(() => {
-    isEnabledRef.current = isEnabled;
-  }, [isEnabled]);
-
-  useEffect(() => {
-    setIsMounted(true);
-    return () => setIsMounted(false);
   }, []);
 
+  // 設定の読み込み
   useEffect(() => {
-    if (!isMounted) return;
-
+    setIsMounted(true);
+    
     try {
       const savedSettings = localStorage.getItem('displayLockSettings');
       if (savedSettings) {
@@ -185,30 +136,11 @@ const DisplayLockProvider = ({ children }) => {
     } catch (error) {
       console.error('Failed to load settings:', error);
     }
-  }, [isMounted]);
 
-  useEffect(() => {
-    if (!isMounted || !isEnabled) return;
+    return () => setIsMounted(false);
+  }, []);
 
-    const handleVisibilityChange = () => {
-      checkFocusAndActivity();
-    };
-
-    const handleActivityCheck = () => {
-      checkFocusAndActivity();
-    };
-
-    focusIntervalRef.current = setInterval(handleActivityCheck, CHECK_INTERVAL);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      if (focusIntervalRef.current) {
-        clearInterval(focusIntervalRef.current);
-      }
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [isMounted, isEnabled, checkFocusAndActivity]);
-
+  // DisplayLockの切り替え
   const toggleDisplayLock = useCallback(async () => {
     if (!isMounted) return;
 
@@ -220,9 +152,15 @@ const DisplayLockProvider = ({ children }) => {
     }
 
     setIsEnabled(newState);
-    leaveTimeRef.current = null;
-    lastActiveTimeRef.current = Date.now();
     setShowWarning(false);
+
+    // Service Workerに状態を通知
+    if (serviceWorkerRegistration?.active) {
+      serviceWorkerRegistration.active.postMessage({
+        type: 'UPDATE_STATE',
+        data: { isEnabled: newState }
+      });
+    }
 
     try {
       localStorage.setItem('displayLockSettings', JSON.stringify({
@@ -232,7 +170,7 @@ const DisplayLockProvider = ({ children }) => {
     } catch (error) {
       console.error('Failed to save settings:', error);
     }
-  }, [isMounted, isEnabled, notificationPermission, warningThreshold, requestNotificationPermission]);
+  }, [isMounted, isEnabled, notificationPermission, warningThreshold, requestNotificationPermission, serviceWorkerRegistration]);
 
   return (
     <DisplayLockContext.Provider value={{
